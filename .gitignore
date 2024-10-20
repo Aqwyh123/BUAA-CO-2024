@@ -1,0 +1,17 @@
+*
+
+!.gitignore
+
+!*.circ
+!*.v
+!*.asm
+
+!*.c
+!*.xise
+
+!*/
+
+/理论/作业/
+/实验/hustzc/
+
+isim/
