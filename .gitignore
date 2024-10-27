@@ -9,9 +9,14 @@
 !*.c
 !*.xise
 
+!*.md
+!*.csv
+!*.png
+
 !*/
 
 /理论/作业/
 /实验/hustzc/
+/实验/课下提交/P3/tester_gui
 
 isim/
