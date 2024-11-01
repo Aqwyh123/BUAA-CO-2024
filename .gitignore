@@ -9,8 +9,8 @@
 !*.c
 !*.xise
 
+!*.txt
 !*.md
-!*.csv
 !*.png
 
 !*/
