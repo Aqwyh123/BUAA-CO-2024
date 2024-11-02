@@ -17,9 +17,9 @@ module ALU (
             `ALUOP_SLL: result = operand1 << operand2[4:0];  // sll
             `ALUOP_SRL: result = operand1 >> operand2[4:0];  // srl
             `ALUOP_SRA: result = $signed(operand1) >>> operand2[4:0];  // sra
-            `ALUOP_LT: result = $signed(operand1) < $signed(operand2) ? 32'b1 : 32'b0;  // lt
-            `ALUOP_GT: result = $signed(operand1) > $signed(operand2) ? 32'b1 : 32'b0;  // gt
-            `ALUOP_LTU: result = operand1 < operand2 ? 32'b1 : 32'b0;  // ltu
+            `ALUOP_LT: result = $signed(operand1) < $signed(operand2) ? 32'd1 : 32'd0;  // lt
+            `ALUOP_GT: result = $signed(operand1) > $signed(operand2) ? 32'd1 : 32'd0;  // gt
+            `ALUOP_LTU: result = operand1 < operand2 ? 32'd1 : 32'd0;  // ltu
             default: result = 32'b0;
         endcase
     end

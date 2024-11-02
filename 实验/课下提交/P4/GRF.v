@@ -17,6 +17,12 @@ module GRF (
     assign read_data1 = regfile[read_reg1];
     assign read_data2 = regfile[read_reg2];
     integer i;
+`ifdef DEBUG
+`ifdef LOCAL
+    integer fd;
+`endif
+`endif
+
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) begin
@@ -26,6 +32,11 @@ module GRF (
             regfile[write_reg] <= write_reg == 5'b0 ? 32'b0 : write_data;
 `ifdef DEBUG
             $display("@%h: $%d <= %h", PC, write_reg, write_data);
+`ifdef LOCAL
+            fd = $fopen(`OUTPUT_PATH, "a");
+            $fwrite(fd, "@%h: $%d <= %h\n", PC, write_reg, write_data);
+            $fclose(fd);
+`endif
 `endif
         end
     end

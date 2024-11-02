@@ -15,11 +15,12 @@ module mips (
         .instruction(instruction)
     );
     wire [5:0] opcode = instruction[31:26], funct = instruction[5:0];
-    wire [4:0] rs = instruction[25:21], rt = instruction[20:16], rd = instruction[15:11], s = instruction[10:6];
+    wire [4:0] rs = instruction[25:21], rt = instruction[20:16], rd = instruction[15:11],
+    s = instruction[10:6];
     wire [15:0] immediate_offset = instruction[15:0];
     wire [25:0] instr_index = instruction[25:0];
 
-    wire [2:0] ALUSrc;
+    wire [3:0] ALUSrc;
     wire [1:0] RegSrc;
     wire [1:0] RegDst;
     wire RegWrite;
@@ -61,6 +62,7 @@ module mips (
             `REGSRC_PC: begin
                 REG_write_data = PC + 32'd4;
             end
+            default REG_write_data = 32'hffffffff;
         endcase
         case (RegDst)
             `REGDST_RT: begin
@@ -72,6 +74,7 @@ module mips (
             `REGDST_RA: begin
                 write_REG = 5'd31;
             end
+            default write_REG = 5'h1f;
         endcase
     end
     GRF grf (
@@ -105,6 +108,7 @@ module mips (
             `ALUSRC1_RT: begin
                 ALUoperand1 = rt_data;
             end
+            default ALUoperand1 = 32'hffffffff;
         endcase
         case (ALUSrc[2:1])
             `ALUSRC2_RT: begin
@@ -113,12 +117,16 @@ module mips (
             `ALUSRC2_IMM_SHAMT: begin
                 ALUoperand2 = EXT_result;
             end
-            `ALUSRC2_S: begin
-                ALUoperand2 = {27'b0, s};
-            end
             `ALUSRC2_ZERO: begin
                 ALUoperand2 = 32'b0;
             end
+            `ALUSRC2_S: begin
+                ALUoperand2 = {27'b0, s};
+            end
+            `ALUSRC2_RS: begin
+                ALUoperand2 = rs_data;
+            end
+            default ALUoperand2 = 32'hffffffff;
         endcase
     end
     ALU alu (
@@ -139,6 +147,7 @@ module mips (
                     2'b01: MEM_write_data = {MEM_raw_data[31:16], rt_data[7:0], MEM_raw_data[7:0]};
                     2'b10: MEM_write_data = {MEM_raw_data[31:24], rt_data[7:0], MEM_raw_data[15:0]};
                     2'b11: MEM_write_data = {rt_data[7:0], MEM_raw_data[23:0]};
+                    default MEM_write_data = 32'hffffffff;
                 endcase
             end
             `MEMSRC_HALF: begin
@@ -169,6 +178,7 @@ module mips (
             `MEMDST_HALFU: begin
                 MEM_data = {16'b0, MEM_raw_data[15:0]};
             end
+            default MEM_data = 32'hffffffff;
         endcase
     end
     DM dm (

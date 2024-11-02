@@ -10,6 +10,13 @@ module DM (
 `endif
     output wire [31:0] data_out
 );
+
+`ifdef DEBUG
+`ifdef LOCAL
+    integer fd;
+`endif
+`endif
+
     reg [31:0] memory[0:`DM_SIZE - 1];
     assign data_out = memory[ADDR>>2];
     integer i;
@@ -23,6 +30,11 @@ module DM (
                 memory[ADDR>>2] = data_in;
 `ifdef DEBUG
                 $display("@%h: *%h <= %h", PC, ADDR, data_in);
+`ifdef LOCAL
+                fd = $fopen(`OUTPUT_PATH, "a");
+                $fwrite(fd, "@%h: *%h <= %h\n", PC, ADDR, data_in);
+                $fclose(fd);
+`endif
 `endif
             end
         end

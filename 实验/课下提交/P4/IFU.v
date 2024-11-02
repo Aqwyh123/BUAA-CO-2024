@@ -6,13 +6,13 @@ module IFU (
     output wire [31:0] PC,
     output wire [31:0] instruction
 );
-    PC pc(
+    PC pc (
         .clk(clk),
         .reset(reset),
         .next_PC(next_PC),
         .PC(PC)
     );
-    IM im(
+    IM im (
         .ADDR(PC),
         .instruction(instruction)
     );
