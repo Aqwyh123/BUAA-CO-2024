@@ -1,3 +1,6 @@
+`ifndef MACROS_V
+`define MACROS_V
+
 `default_nettype none // 强制使用显式端口声明
 
 `define DEBUG // 是否综合
@@ -68,3 +71,5 @@
 `define ALUOP_LT 4'b1001
 `define ALUOP_GT 4'b1010
 `define ALUOP_LTU 4'b1011
+
+`endif
