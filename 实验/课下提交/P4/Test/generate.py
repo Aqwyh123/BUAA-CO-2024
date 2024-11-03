@@ -2,12 +2,13 @@
 # Address: http://cscore.buaa.edu.cn/#/discussion_area/1476/1767/posts
 
 import random
+import os
 
-file_name = "asm.txt"
+file_name = "std.asm"
 
 
-def generate(instr_type: str, instr_num: int = 0):
-    file = open(file_name, "w")
+def generate(instr_type: str, instr_num: int = 0, file_mode: str = "w"):
+    file = open(file_name, file_mode)
     if instr_type == "ori":
         for line in range(0, instr_num // 2):
             a = random.randint(0, 31)
@@ -121,11 +122,18 @@ true_end:
 
 
 supported_instr = ["ori", "lui", "sw", "lw", "add", "sub", "beq", "jr", "jal"]
+all_instr = ["ori", "lui", "lw", "add", "sub", "beq", "jal"]
 no_need_num = ["beq", "jr", "jal"]
 
 if __name__ == "__main__":
+    if os.path.exists(file_name):
+        os.remove(file_name)
     while True:
         input_type = input("Input the type of instruction: ")
+        if input_type == "all":
+            for instr in all_instr[::-1]:
+                generate(instr, 30, "a")
+            break
         if input_type not in supported_instr:
             print("Wrong input. Please try again!")
             continue
@@ -136,6 +144,5 @@ if __name__ == "__main__":
                 continue
             generate(input_type, int(input_num))
             break
-        else:
-            generate(input_type)
-            break
+        generate(input_type)
+        break
