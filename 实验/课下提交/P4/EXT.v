@@ -6,10 +6,10 @@ module EXT (
 );
     always @(*) begin
         case (operation)
-            `EXTOP_ZERO: result = {16'b0, operand};
+            `EXTOP_ZERO: result = {16'd0, operand};
             `EXTOP_SIGN: result = {{16{operand[15]}}, operand};
-            `EXTOP_UPPER: result = {operand, 16'b0};
-            default: result = 32'b0;
+            `EXTOP_UPPER: result = {operand, 16'd0};
+            default: result = 32'd0;
         endcase
     end
 

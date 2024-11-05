@@ -20,9 +20,9 @@ module ALU (
             `ALUOP_LT: result = $signed(operand1) < $signed(operand2) ? 32'd1 : 32'd0;  // lt
             `ALUOP_GT: result = $signed(operand1) > $signed(operand2) ? 32'd1 : 32'd0;  // gt
             `ALUOP_LTU: result = operand1 < operand2 ? 32'd1 : 32'd0;  // ltu
-            default: result = 32'b0;
+            default: result = 32'd0;
         endcase
     end
-    assign zero = result == 32'b0;
+    assign zero = result == 32'd0;
 
 endmodule

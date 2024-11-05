@@ -23,16 +23,16 @@ module DM (
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < `DM_SIZE; i = i + 1) begin
-                memory[i] = 32'b0;
+                memory[i] = 32'd0;
             end
         end else begin
             if (write_enable) begin
                 memory[ADDR>>2] = data_in;
 `ifdef DEBUG
-                $display("@%h: *%h <= %h", PC, ADDR, data_in);
+                $display("@%h: *%h <= %h", PC, {ADDR[31:2], 2'b00}, data_in);
 `ifdef LOCAL
                 fd = $fopen(`OUTPUT_PATH, "a");
-                $fwrite(fd, "@%h: *%h <= %h\n", PC, ADDR, data_in);
+                $fwrite(fd, "@%h: *%h <= %h\n", PC, {ADDR[31:2], 2'b00}, data_in);
                 $fclose(fd);
 `endif
 `endif

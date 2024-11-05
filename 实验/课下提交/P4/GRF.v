@@ -26,10 +26,10 @@ module GRF (
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) begin
-                regfile[i] <= 32'b0;
+                regfile[i] <= 32'd0;
             end
         end else if (write_enable) begin
-            regfile[write_reg] <= write_reg == 5'b0 ? 32'b0 : write_data;
+            regfile[write_reg] <= write_reg == 5'd0 ? 32'd0 : write_data;
 `ifdef DEBUG
             $display("@%h: $%d <= %h", PC, write_reg, write_data);
 `ifdef LOCAL

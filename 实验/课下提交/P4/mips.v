@@ -110,7 +110,7 @@ module mips (
             end
             default ALUoperand1 = 32'hffffffff;
         endcase
-        case (ALUSrc[2:1])
+        case (ALUSrc[3:1])
             `ALUSRC2_RT: begin
                 ALUoperand2 = rt_data;
             end
@@ -118,10 +118,10 @@ module mips (
                 ALUoperand2 = EXT_result;
             end
             `ALUSRC2_ZERO: begin
-                ALUoperand2 = 32'b0;
+                ALUoperand2 = 32'd0;
             end
             `ALUSRC2_S: begin
-                ALUoperand2 = {27'b0, s};
+                ALUoperand2 = {27'd0, s};
             end
             `ALUSRC2_RS: begin
                 ALUoperand2 = rs_data;
@@ -164,19 +164,39 @@ module mips (
         endcase
         case (MemDst)
             `MEMDST_BYTE: begin
-                MEM_data = {{24{MEM_raw_data[7]}}, MEM_raw_data[7:0]};
+                case (ALU_result[1:0])
+                    2'b00: MEM_data = {{24{MEM_raw_data[7]}}, MEM_raw_data[7:0]};
+                    2'b01: MEM_data = {{24{MEM_raw_data[15]}}, MEM_raw_data[15:8]};
+                    2'b10: MEM_data = {{24{MEM_raw_data[23]}}, MEM_raw_data[23:16]};
+                    2'b11: MEM_data = {{24{MEM_raw_data[31]}}, MEM_raw_data[31:24]};
+                    default MEM_data = 32'hffffffff;
+                endcase
             end
             `MEMDST_HALF: begin
-                MEM_data = {{16{MEM_raw_data[15]}}, MEM_raw_data[15:0]};
+                case(ALU_result[1:0])
+                    2'b00: MEM_data = {{16{MEM_raw_data[15]}}, MEM_raw_data[15:0]};
+                    2'b10: MEM_data = {{16{MEM_raw_data[31]}}, MEM_raw_data[31:16]};
+                    default MEM_data = 32'hffffffff;
+                endcase
             end
             `MEMDST_WORD: begin
                 MEM_data = MEM_raw_data;
             end
             `MEMDST_BYTEU: begin
-                MEM_data = {24'b0, MEM_raw_data[7:0]};
+                case (ALU_result[1:0])
+                    2'b00: MEM_data = {24'd0, MEM_raw_data[7:0]};
+                    2'b01: MEM_data = {24'd0, MEM_raw_data[15:8]};
+                    2'b10: MEM_data = {24'd0, MEM_raw_data[23:16]};
+                    2'b11: MEM_data = {24'd0, MEM_raw_data[31:24]};
+                    default MEM_data = 32'hffffffff;
+                endcase
             end
             `MEMDST_HALFU: begin
-                MEM_data = {16'b0, MEM_raw_data[15:0]};
+                case (ALU_result[1:0])
+                    2'b00: MEM_data = {16'd0, MEM_raw_data[15:0]};
+                    2'b10: MEM_data = {16'd0, MEM_raw_data[31:16]};
+                    default MEM_data = 32'hffffffff;
+                endcase
             end
             default MEM_data = 32'hffffffff;
         endcase
