@@ -1,10 +1,9 @@
 `include "macros.v"
 module ALU (
-    input wire [31:0] operand1,
-    input wire [31:0] operand2,
-    input wire [3:0] operation,
-    output reg [31:0] result,
-    output wire zero
+    input  wire [31:0] operand1,
+    input  wire [31:0] operand2,
+    input  wire [ 3:0] operation,
+    output reg  [31:0] result
 );
     always @(*) begin
         case (operation)
@@ -18,11 +17,8 @@ module ALU (
             `ALUOP_SRL: result = operand1 >> operand2[4:0];  // srl
             `ALUOP_SRA: result = $signed(operand1) >>> operand2[4:0];  // sra
             `ALUOP_LT: result = $signed(operand1) < $signed(operand2) ? 32'd1 : 32'd0;  // lt
-            `ALUOP_GT: result = $signed(operand1) > $signed(operand2) ? 32'd1 : 32'd0;  // gt
             `ALUOP_LTU: result = operand1 < operand2 ? 32'd1 : 32'd0;  // ltu
             default: result = 32'd0;
         endcase
     end
-    assign zero = result == 32'd0;
-
 endmodule

@@ -1,7 +1,7 @@
 `ifndef MACROS_V
 `define MACROS_V
 
-`default_nettype none // 强制使用显式端口声明
+`default_nettype none  // 强制使用显式端口声明
 
 `define DEBUG // 是否综合
 
@@ -31,6 +31,13 @@
 `define ALUSRC2_S 3'b011
 `define ALUSRC2_RS 3'b100
 
+`define CMPOP_EQ 3'b000
+`define CMPOP_NE 3'b001
+`define CMPOP_LT 3'b010
+`define CMPOP_LE 3'b011
+`define CMPOP_GT 3'b100
+`define CMPOP_GE 3'b101
+
 `define REGSRC_ALU 2'b00
 `define REGSRC_MEM 2'b01
 
@@ -49,8 +56,8 @@
 `define MEMDST_BYTEU 3'b100
 `define MEMDST_HALFU 3'b101
 
-`define BRANCH_ZERO 2'b01
-`define BRANCH_NONZERO 2'b10
+`define BRANCH 2'b01
+`define BRANCH_LINK 2'b10
 
 `define JUMP_INDEX 2'b01
 `define JUMP_REG 2'b10
@@ -69,7 +76,6 @@
 `define ALUOP_SRL 4'b0111
 `define ALUOP_SRA 4'b1000
 `define ALUOP_LT 4'b1001
-`define ALUOP_GT 4'b1010
 `define ALUOP_LTU 4'b1011
 
 `endif

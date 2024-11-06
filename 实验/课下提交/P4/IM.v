@@ -3,7 +3,6 @@ module IM (
     input  wire [31:0] ADDR,
     output wire [31:0] instruction
 );
-
 `ifdef DEBUG
 `ifdef LOCAL
     integer fd;
@@ -21,5 +20,4 @@ module IM (
     end
 `endif
     assign instruction = ROM[ADDR>>2];
-
 endmodule

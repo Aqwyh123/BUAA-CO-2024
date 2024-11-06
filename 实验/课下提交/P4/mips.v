@@ -3,7 +3,6 @@ module mips (
     input wire clk,
     input wire reset
 );
-
     wire [31:0] PC, instruction;
     IFU ifu (
         .clk(clk),
@@ -15,7 +14,7 @@ module mips (
         .instruction(instruction)
     );
     wire [5:0] opcode = instruction[31:26], funct = instruction[5:0];
-    wire [4:0] rs = instruction[25:21], rt = instruction[20:16], rd = instruction[15:11],
+    wire [4:0] rs_base = instruction[25:21], rt = instruction[20:16], rd = instruction[15:11],
     s = instruction[10:6];
     wire [15:0] immediate_offset = instruction[15:0];
     wire [25:0] instr_index = instruction[25:0];
@@ -31,6 +30,7 @@ module mips (
     wire [1:0] Jump;
     wire [1:0] EXTop;
     wire [3:0] ALUop;
+    wire [2:0] CMPop;
     Control control (
         .opcode(opcode),
         .funct(funct),
@@ -45,19 +45,20 @@ module mips (
         .Branch(Branch),
         .Jump(Jump),
         .EXTop(EXTop),
-        .ALUop(ALUop)
+        .ALUop(ALUop),
+        .CMPop(CMPop)
     );
 
-    wire [31:0] rs_data, rt_data;
+    wire [31:0] rs_base_data, rt_data;
     reg [31:0] REG_write_data;
-    reg [ 4:0] write_REG;
+    reg [ 4:0] REG_write_number;
     always @(*) begin
         case (RegSrc)
             `REGSRC_ALU: begin
                 REG_write_data = ALU_result;
             end
             `REGSRC_MEM: begin
-                REG_write_data = MEM_data;
+                REG_write_data = MEM_read_data;
             end
             `REGSRC_PC: begin
                 REG_write_data = PC + 32'd4;
@@ -66,27 +67,27 @@ module mips (
         endcase
         case (RegDst)
             `REGDST_RT: begin
-                write_REG = rt;
+                REG_write_number = rt;
             end
             `REGDST_RD: begin
-                write_REG = rd;
+                REG_write_number = rd;
             end
             `REGDST_RA: begin
-                write_REG = 5'd31;
+                REG_write_number = 5'd31;
             end
-            default write_REG = 5'h1f;
+            default REG_write_number = 5'h1f;
         endcase
     end
     GRF grf (
         .clk(clk),
         .reset(reset),
-        .read_reg1(rs),
-        .read_reg2(rt),
-        .write_reg(write_REG),
-        .write_enable(RegWrite),
+        .read_number1(rs_base),
+        .read_number2(rt),
+        .write_number(REG_write_number),
+        .write_enable(Branch == `BRANCH_LINK ? CMP_result : RegWrite),
         .write_data(REG_write_data),
         .PC(PC),
-        .read_data1(rs_data),
+        .read_data1(rs_base_data),
         .read_data2(rt_data)
     );
 
@@ -99,11 +100,10 @@ module mips (
 
     reg [31:0] ALUoperand1, ALUoperand2;
     wire [31:0] ALU_result;
-    wire ALU_zero;
     always @(*) begin
         case (ALUSrc[0])
             `ALUSRC1_RS: begin
-                ALUoperand1 = rs_data;
+                ALUoperand1 = rs_base_data;
             end
             `ALUSRC1_RT: begin
                 ALUoperand1 = rt_data;
@@ -124,7 +124,7 @@ module mips (
                 ALUoperand2 = {27'd0, s};
             end
             `ALUSRC2_RS: begin
-                ALUoperand2 = rs_data;
+                ALUoperand2 = rs_base_data;
             end
             default ALUoperand2 = 32'hffffffff;
         endcase
@@ -133,27 +133,40 @@ module mips (
         .operand1(ALUoperand1),
         .operand2(ALUoperand2),
         .operation(ALUop),
-        .result(ALU_result),
-        .zero(ALU_zero)
+        .result(ALU_result)
     );
 
-    wire [31:0] MEM_raw_data;
-    reg [31:0] MEM_data, MEM_write_data;
+    wire CMP_result;
+    CMP cmp (
+        .operand1(rs_base_data),
+        .operand2(rt_data),
+        .operation(CMPop),
+        .result(CMP_result)
+    );
+
+    wire [31:0] MEM_read_data_raw;
+    reg [31:0] MEM_read_data, MEM_write_data;
     always @(*) begin
         case (MemSrc)
             `MEMSRC_BYTE: begin
                 case (ALU_result[1:0])
-                    2'b00: MEM_write_data = {MEM_raw_data[31:8], rt_data[7:0]};
-                    2'b01: MEM_write_data = {MEM_raw_data[31:16], rt_data[7:0], MEM_raw_data[7:0]};
-                    2'b10: MEM_write_data = {MEM_raw_data[31:24], rt_data[7:0], MEM_raw_data[15:0]};
-                    2'b11: MEM_write_data = {rt_data[7:0], MEM_raw_data[23:0]};
+                    2'b00: MEM_write_data = {MEM_read_data_raw[31:8], rt_data[7:0]};
+                    2'b01:
+                    MEM_write_data = {
+                        MEM_read_data_raw[31:16], rt_data[7:0], MEM_read_data_raw[7:0]
+                    };
+                    2'b10:
+                    MEM_write_data = {
+                        MEM_read_data_raw[31:24], rt_data[7:0], MEM_read_data_raw[15:0]
+                    };
+                    2'b11: MEM_write_data = {rt_data[7:0], MEM_read_data_raw[23:0]};
                     default MEM_write_data = 32'hffffffff;
                 endcase
             end
             `MEMSRC_HALF: begin
                 case (ALU_result[1:0])
-                    2'b00: MEM_write_data = {MEM_raw_data[31:16], rt_data[15:0]};
-                    2'b10: MEM_write_data = {rt_data[15:0], MEM_raw_data[15:0]};
+                    2'b00: MEM_write_data = {MEM_read_data_raw[31:16], rt_data[15:0]};
+                    2'b10: MEM_write_data = {rt_data[15:0], MEM_read_data_raw[15:0]};
                     default MEM_write_data = 32'hffffffff;
                 endcase
             end
@@ -165,52 +178,52 @@ module mips (
         case (MemDst)
             `MEMDST_BYTE: begin
                 case (ALU_result[1:0])
-                    2'b00: MEM_data = {{24{MEM_raw_data[7]}}, MEM_raw_data[7:0]};
-                    2'b01: MEM_data = {{24{MEM_raw_data[15]}}, MEM_raw_data[15:8]};
-                    2'b10: MEM_data = {{24{MEM_raw_data[23]}}, MEM_raw_data[23:16]};
-                    2'b11: MEM_data = {{24{MEM_raw_data[31]}}, MEM_raw_data[31:24]};
-                    default MEM_data = 32'hffffffff;
+                    2'b00: MEM_read_data = {{24{MEM_read_data_raw[7]}}, MEM_read_data_raw[7:0]};
+                    2'b01: MEM_read_data = {{24{MEM_read_data_raw[15]}}, MEM_read_data_raw[15:8]};
+                    2'b10: MEM_read_data = {{24{MEM_read_data_raw[23]}}, MEM_read_data_raw[23:16]};
+                    2'b11: MEM_read_data = {{24{MEM_read_data_raw[31]}}, MEM_read_data_raw[31:24]};
+                    default MEM_read_data = 32'hffffffff;
                 endcase
             end
             `MEMDST_HALF: begin
-                case(ALU_result[1:0])
-                    2'b00: MEM_data = {{16{MEM_raw_data[15]}}, MEM_raw_data[15:0]};
-                    2'b10: MEM_data = {{16{MEM_raw_data[31]}}, MEM_raw_data[31:16]};
-                    default MEM_data = 32'hffffffff;
+                case (ALU_result[1:0])
+                    2'b00: MEM_read_data = {{16{MEM_read_data_raw[15]}}, MEM_read_data_raw[15:0]};
+                    2'b10: MEM_read_data = {{16{MEM_read_data_raw[31]}}, MEM_read_data_raw[31:16]};
+                    default MEM_read_data = 32'hffffffff;
                 endcase
             end
             `MEMDST_WORD: begin
-                MEM_data = MEM_raw_data;
+                MEM_read_data = MEM_read_data_raw;
             end
             `MEMDST_BYTEU: begin
                 case (ALU_result[1:0])
-                    2'b00: MEM_data = {24'd0, MEM_raw_data[7:0]};
-                    2'b01: MEM_data = {24'd0, MEM_raw_data[15:8]};
-                    2'b10: MEM_data = {24'd0, MEM_raw_data[23:16]};
-                    2'b11: MEM_data = {24'd0, MEM_raw_data[31:24]};
-                    default MEM_data = 32'hffffffff;
+                    2'b00: MEM_read_data = {24'd0, MEM_read_data_raw[7:0]};
+                    2'b01: MEM_read_data = {24'd0, MEM_read_data_raw[15:8]};
+                    2'b10: MEM_read_data = {24'd0, MEM_read_data_raw[23:16]};
+                    2'b11: MEM_read_data = {24'd0, MEM_read_data_raw[31:24]};
+                    default MEM_read_data = 32'hffffffff;
                 endcase
             end
             `MEMDST_HALFU: begin
                 case (ALU_result[1:0])
-                    2'b00: MEM_data = {16'd0, MEM_raw_data[15:0]};
-                    2'b10: MEM_data = {16'd0, MEM_raw_data[31:16]};
-                    default MEM_data = 32'hffffffff;
+                    2'b00: MEM_read_data = {16'd0, MEM_read_data_raw[15:0]};
+                    2'b10: MEM_read_data = {16'd0, MEM_read_data_raw[31:16]};
+                    default MEM_read_data = 32'hffffffff;
                 endcase
             end
-            default MEM_data = 32'hffffffff;
+            default MEM_read_data = 32'hffffffff;
         endcase
     end
     DM dm (
         .clk(clk),
         .reset(reset),
         .ADDR(ALU_result),
-        .data_in(MEM_write_data),
+        .write_data(MEM_write_data),
         .write_enable(MemWrite),
 `ifdef DEBUG
         .PC(PC),
 `endif
-        .data_out(MEM_raw_data)
+        .read_data(MEM_read_data_raw)
     );
 
     wire [31:0] next_PC;
@@ -218,11 +231,9 @@ module mips (
         .PC(PC),
         .offset(immediate_offset),
         .instr_index(instr_index),
-        .regester(rs_data),
-        .ALU_zero(ALU_zero),
-        .branch(Branch),
+        .regester(rs_base_data),
+        .branch(Branch && CMP_result),
         .jump(Jump),
         .next_PC(next_PC)
     );
-
 endmodule

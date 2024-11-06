@@ -16,5 +16,4 @@ module IFU (
         .ADDR(PC),
         .instruction(instruction)
     );
-
 endmodule

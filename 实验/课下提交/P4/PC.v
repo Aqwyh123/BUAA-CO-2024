@@ -14,5 +14,4 @@ module PC (
         end
     end
     assign PC = regester;
-
 endmodule
