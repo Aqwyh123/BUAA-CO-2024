@@ -9,9 +9,7 @@ module mips (
         .clk(clk),
         .reset(reset),
         .next_PC(next_PC),
-`ifdef DEBUG
         .PC(PC),
-`endif
         .instruction(instruction)
     );
     wire [5:0] opcode = instruction[31:26], funct = instruction[5:0];
@@ -24,9 +22,7 @@ module mips (
     wire [1:0] RegSrc;
     wire [1:0] RegDst;
     wire RegWrite;
-    wire [1:0] MemSrc;
-    wire [2:0] MemDst;
-    wire MemWrite;
+    wire [3:0] DMop;
     wire [1:0] Branch;
     wire [1:0] Jump;
     wire [1:0] EXTop;
@@ -40,9 +36,7 @@ module mips (
         .RegSrc(RegSrc),
         .RegDst(RegDst),
         .RegWrite(RegWrite),
-        .MemSrc(MemSrc),
-        .MemDst(MemDst),
-        .MemWrite(MemWrite),
+        .DMop(DMop),
         .Branch(Branch),
         .Jump(Jump),
         .EXTop(EXTop),
@@ -87,7 +81,9 @@ module mips (
         .write_number(REG_write_number),
         .write_enable(Branch == `BRANCH_LINK ? CMP_result : RegWrite),
         .write_data(REG_write_data),
+`ifdef DEBUG
         .PC(PC),
+`endif
         .read_data1(rs_base_data),
         .read_data2(rt_data)
     );
@@ -97,6 +93,25 @@ module mips (
         .operand(immediate_offset),
         .operation(EXTop),
         .result(EXT_result)
+    );
+
+    wire CMP_result;
+    CMP cmp (
+        .operand1(rs_base_data),
+        .operand2(rt_data),
+        .operation(CMPop),
+        .result(CMP_result)
+    );
+
+    wire [31:0] next_PC;
+    NPC npc (
+        .PC(PC),
+        .offset(immediate_offset),
+        .instr_index(instr_index),
+        .regester(rs_base_data),
+        .branch(Branch && CMP_result),
+        .jump(Jump),
+        .next_PC(next_PC)
     );
 
     reg [31:0] ALUoperand1, ALUoperand2;
@@ -137,104 +152,16 @@ module mips (
         .result(ALU_result)
     );
 
-    wire CMP_result;
-    CMP cmp (
-        .operand1(rs_base_data),
-        .operand2(rt_data),
-        .operation(CMPop),
-        .result(CMP_result)
-    );
-
-    wire [31:0] MEM_read_data_raw;
-    reg [31:0] MEM_read_data, MEM_write_data;
-    always @(*) begin
-        case (MemSrc)
-            `MEMSRC_BYTE: begin
-                case (ALU_result[1:0])
-                    2'b00: MEM_write_data = {MEM_read_data_raw[31:8], rt_data[7:0]};
-                    2'b01:
-                    MEM_write_data = {
-                        MEM_read_data_raw[31:16], rt_data[7:0], MEM_read_data_raw[7:0]
-                    };
-                    2'b10:
-                    MEM_write_data = {
-                        MEM_read_data_raw[31:24], rt_data[7:0], MEM_read_data_raw[15:0]
-                    };
-                    2'b11: MEM_write_data = {rt_data[7:0], MEM_read_data_raw[23:0]};
-                    default MEM_write_data = 32'hffffffff;
-                endcase
-            end
-            `MEMSRC_HALF: begin
-                case (ALU_result[1:0])
-                    2'b00: MEM_write_data = {MEM_read_data_raw[31:16], rt_data[15:0]};
-                    2'b10: MEM_write_data = {rt_data[15:0], MEM_read_data_raw[15:0]};
-                    default MEM_write_data = 32'hffffffff;
-                endcase
-            end
-            `MEMSRC_WORD: begin
-                MEM_write_data = rt_data;
-            end
-            default MEM_write_data = 32'hffffffff;
-        endcase
-        case (MemDst)
-            `MEMDST_BYTE: begin
-                case (ALU_result[1:0])
-                    2'b00: MEM_read_data = {{24{MEM_read_data_raw[7]}}, MEM_read_data_raw[7:0]};
-                    2'b01: MEM_read_data = {{24{MEM_read_data_raw[15]}}, MEM_read_data_raw[15:8]};
-                    2'b10: MEM_read_data = {{24{MEM_read_data_raw[23]}}, MEM_read_data_raw[23:16]};
-                    2'b11: MEM_read_data = {{24{MEM_read_data_raw[31]}}, MEM_read_data_raw[31:24]};
-                    default MEM_read_data = 32'hffffffff;
-                endcase
-            end
-            `MEMDST_HALF: begin
-                case (ALU_result[1:0])
-                    2'b00: MEM_read_data = {{16{MEM_read_data_raw[15]}}, MEM_read_data_raw[15:0]};
-                    2'b10: MEM_read_data = {{16{MEM_read_data_raw[31]}}, MEM_read_data_raw[31:16]};
-                    default MEM_read_data = 32'hffffffff;
-                endcase
-            end
-            `MEMDST_WORD: begin
-                MEM_read_data = MEM_read_data_raw;
-            end
-            `MEMDST_BYTEU: begin
-                case (ALU_result[1:0])
-                    2'b00: MEM_read_data = {24'd0, MEM_read_data_raw[7:0]};
-                    2'b01: MEM_read_data = {24'd0, MEM_read_data_raw[15:8]};
-                    2'b10: MEM_read_data = {24'd0, MEM_read_data_raw[23:16]};
-                    2'b11: MEM_read_data = {24'd0, MEM_read_data_raw[31:24]};
-                    default MEM_read_data = 32'hffffffff;
-                endcase
-            end
-            `MEMDST_HALFU: begin
-                case (ALU_result[1:0])
-                    2'b00: MEM_read_data = {16'd0, MEM_read_data_raw[15:0]};
-                    2'b10: MEM_read_data = {16'd0, MEM_read_data_raw[31:16]};
-                    default MEM_read_data = 32'hffffffff;
-                endcase
-            end
-            default MEM_read_data = 32'hffffffff;
-        endcase
-    end
+    wire [31:0] MEM_read_data;
     DM dm (
         .clk(clk),
         .reset(reset),
         .ADDR(ALU_result),
-        .write_data(MEM_write_data),
-        .write_enable(MemWrite),
+        .write_data_raw(rt_data),
+        .operation(DMop),
 `ifdef DEBUG
         .PC(PC),
 `endif
-        .read_data(MEM_read_data_raw)
-    );
-
-    wire [31:0] next_PC;
-    NPC npc (
-        .PC(PC),
-        .offset(immediate_offset),
-        .instr_index(instr_index),
-        .regester(rs_base_data),
-        .branch(Branch && CMP_result),
-        .jump(Jump),
-        .next_PC(next_PC)
+        .read_data(MEM_read_data)
     );
 endmodule

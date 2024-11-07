@@ -7,9 +7,7 @@ module Control (
     output reg [1:0] RegSrc,
     output reg [1:0] RegDst,
     output reg RegWrite,
-    output reg [1:0] MemSrc,
-    output reg [2:0] MemDst,
-    output reg MemWrite,
+    output reg [3:0] DMop,
     output reg [1:0] Branch,
     output reg [1:0] Jump,
     output reg [1:0] EXTop,
@@ -22,9 +20,7 @@ module Control (
             RegSrc = 3'b000;
             RegDst = 2'b00;
             RegWrite = 1'b0;
-            MemSrc = 2'b00;
-            MemDst = 3'b000;
-            MemWrite = 1'b0;
+            DMop = 4'b0000;
             Branch = 2'b00;
             Jump = 2'b00;
             EXTop = 2'b00;
@@ -39,9 +35,7 @@ module Control (
                             RegSrc = `REGSRC_ALU;
                             RegDst = `REGDST_RD;
                             RegWrite = 1'b1;
-                            MemSrc = 2'b00;
-                            MemDst = 2'b00;
-                            MemWrite = 1'b0;
+                            DMop = 4'b0000;
                             Branch = 2'b00;
                             Jump = 2'b00;
                             EXTop = 2'b00;
@@ -53,9 +47,7 @@ module Control (
                             RegSrc = `REGSRC_ALU;
                             RegDst = `REGDST_RD;
                             RegWrite = 1'b1;
-                            MemSrc = 2'b00;
-                            MemDst = 2'b00;
-                            MemWrite = 1'b0;
+                            DMop = 4'b0000;
                             Branch = 2'b00;
                             Jump = 2'b00;
                             EXTop = 2'b00;
@@ -67,9 +59,7 @@ module Control (
                             RegSrc = 3'b000;
                             RegDst = 2'b00;
                             RegWrite = 1'b0;
-                            MemSrc = 2'b00;
-                            MemDst = 3'b000;
-                            MemWrite = 1'b0;
+                            DMop = 4'b0000;
                             Branch = 2'b00;
                             Jump = `JUMP_REG;
                             EXTop = 2'b00;
@@ -81,9 +71,7 @@ module Control (
                             RegSrc = 2'b00;
                             RegDst = 2'b00;
                             RegWrite = 1'b0;
-                            MemSrc = 2'b00;
-                            MemDst = 3'b000;
-                            MemWrite = 1'b0;
+                            DMop = 4'b0000;
                             Branch = 2'b00;
                             Jump = 2'b00;
                             EXTop = 2'b00;
@@ -97,9 +85,7 @@ module Control (
                     RegSrc = `REGSRC_ALU;
                     RegDst = `REGDST_RT;
                     RegWrite = 1'b1;
-                    MemSrc = 2'b00;
-                    MemDst = 2'b00;
-                    MemWrite = 1'b0;
+                    DMop = 4'b0000;
                     Branch = 2'b00;
                     Jump = 2'b00;
                     EXTop = `EXTOP_ZERO;
@@ -111,9 +97,7 @@ module Control (
                     RegSrc = `REGSRC_MEM;
                     RegDst = `REGDST_RT;
                     RegWrite = 1'b1;
-                    MemSrc = 2'b00;
-                    MemDst = `MEMDST_WORD;
-                    MemWrite = 1'b0;
+                    DMop = {`DMOP_WORD, 1'b0};
                     Branch = 2'b00;
                     Jump = 2'b00;
                     EXTop = `EXTOP_SIGN;
@@ -125,9 +109,7 @@ module Control (
                     RegSrc = 2'b00;
                     RegDst = `REGDST_RT;
                     RegWrite = 1'b0;
-                    MemSrc = `MEMSRC_WORD;
-                    MemDst = 2'b00;
-                    MemWrite = 1'b1;
+                    DMop = {`DMOP_WORD, 1'b1};
                     Branch = 2'b00;
                     Jump = 2'b00;
                     EXTop = `EXTOP_SIGN;
@@ -139,9 +121,7 @@ module Control (
                     RegSrc = 3'b000;
                     RegDst = 2'b00;
                     RegWrite = 1'b0;
-                    MemSrc = 2'b00;
-                    MemDst = 3'b000;
-                    MemWrite = 1'b0;
+                    DMop = 4'b0000;
                     Branch = `BRANCH;
                     Jump = 2'b00;
                     EXTop = 2'b00;
@@ -153,9 +133,7 @@ module Control (
                     RegSrc = `REGSRC_ALU;
                     RegDst = `REGDST_RT;
                     RegWrite = 1'b1;
-                    MemSrc = 2'b00;
-                    MemDst = 2'b00;
-                    MemWrite = 1'b0;
+                    DMop = 4'b0000;
                     Branch = 2'b00;
                     Jump = 2'b00;
                     EXTop = `EXTOP_UPPER;
@@ -167,9 +145,7 @@ module Control (
                     RegSrc = `REGSRC_PC;
                     RegDst = `REGDST_RA;
                     RegWrite = 1'b1;
-                    MemSrc = 2'b00;
-                    MemDst = 3'b000;
-                    MemWrite = 1'b0;
+                    DMop = 4'b0000;
                     Branch = 2'b00;
                     Jump = `JUMP_INDEX;
                     EXTop = 2'b00;
@@ -181,9 +157,7 @@ module Control (
                     RegSrc = 2'b00;
                     RegDst = 2'b00;
                     RegWrite = 1'b0;
-                    MemSrc = 2'b00;
-                    MemDst = 3'b000;
-                    MemWrite = 1'b0;
+                    DMop = 4'b0000;
                     Branch = 2'b00;
                     Jump = 2'b00;
                     EXTop = 2'b00;
