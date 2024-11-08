@@ -43,6 +43,7 @@ module mips (
     wire [1:0] D_EXTop;
     wire D_CMPSrc;
     wire [2:0] D_CMPop;
+
     // 写回阶段 Writeback 继续
     GRF DW_grf (
         .clk(clk),
@@ -60,20 +61,22 @@ module mips (
     );
     wire [31:0] D_rs_base_data, D_rt_data;
     // 写回阶段 Writeback 结束
-    wire [31:0] D_EXT_result;
+
     EXT D_ext (
         .operand(D_immediate_offset),
         .operation(D_EXTop),
         .result(D_EXT_result)
     );
+    wire [31:0] D_EXT_result;
 
-    wire D_CMP_result;
+
     CMP D_cmp (
         .operand1(D_rs_base_data),
         .operand2(D_CMPSrc == `CMPSRC_RT ? D_rt_data : 32'd0),
         .operation(D_CMPop),
         .result(D_CMP_result)
     );
+    wire D_CMP_result;
 
     NPC D_npc (
         .PC(D_PC),
@@ -106,6 +109,8 @@ module mips (
     wire E_CMP_result;
 
     // 执行阶段 Execute 开始
+    wire [4:0] E_shamt = E_instruction[10:6];
+
     Contorl E_control (  // E 控制器
         .instruction(E_instruction),
         .ALUSrc(E_ALUSrc),
@@ -133,7 +138,7 @@ module mips (
                 E_ALUoperand2 = E_EXT_result;
             end
             `ALUSRC2_S: begin
-                E_ALUoperand2 = {27'd0, E_instruction[10:6]};
+                E_ALUoperand2 = {27'd0, E_shamt};
             end
             `ALUSRC2_RS: begin
                 E_ALUoperand2 = E_rs_base_data;
