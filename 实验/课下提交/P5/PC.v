@@ -3,6 +3,7 @@
 module PC (
     input wire clk,
     input wire reset,
+    input wire stall,
     input wire [31:0] next_PC,
     output wire [31:0] PC
 );
@@ -10,7 +11,7 @@ module PC (
     always @(posedge clk) begin
         if (reset) begin
             regester <= `PC_INIT;
-        end else begin
+        end else if(!stall)begin
             regester <= next_PC;
         end
     end

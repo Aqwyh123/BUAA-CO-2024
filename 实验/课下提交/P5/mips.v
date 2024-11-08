@@ -4,10 +4,33 @@ module mips (
     input wire clk,
     input wire reset
 );
+    HazardControl hazard_control (
+        .D_rs_base(D_rs_base),
+        .D_rt(D_rt),
+        .E_rs_base(E_rs_base),
+        .E_rt(E_rt),
+        .M_rs_base(M_rs_base),
+        .M_rt(M_rt),
+        .D_REG_write_number(D_REG_write_number),
+        .E_REG_write_number(E_REG_write_number),
+        .M_REG_write_number(M_REG_write_number),
+        .D_T_use_rs_base(D_T_use_rs_base),
+        .D_T_use_rt(D_T_use_rt),
+        .D_T_new(D_T_new),
+        .E_T_use_rs_base(E_T_use_rs_base),
+        .E_T_use_rt(E_T_use_rt),
+        .E_T_new(E_T_new),
+        .M_T_use_rs_base(M_T_use_rs_base),
+        .M_T_use_rt(M_T_use_rt),
+        .M_T_new(M_T_new),
+        .stall(stall)
+    );
+
     // 取指阶段 Fetch 开始
     IFU F_ifu (
         .clk(clk),
         .reset(reset),
+        .stall(stall),
         .next_PC(D_next_PC),
         .PC(F_PC),
         .instruction(F_instruction)
@@ -26,23 +49,45 @@ module mips (
     wire [31:0] D_PC, D_instruction;
 
     // 译码阶段 Decode 开始
-    wire [ 4:0] D_rs_base = D_instruction[25:21], D_rt = D_instruction[20:16];
+    wire [ 4:0] D_rs_base = D_instruction[25:21], D_rt = D_instruction[20:16], D_rd = D_instruction[15:11];
     wire [15:0] D_immediate_offset = D_instruction[15:0];
     wire [25:0] D_instr_index_offset = D_instruction[25:0];
 
-    Control D_control (  // D 控制器
+    Control #(`STAGE_DECODE) D_control (  // D 控制器
         .instruction(D_instruction),
+        .RegDst(D_RegDst),
         .Branch(D_Branch),
         .Jump(D_Jump),
         .EXTop(D_EXTop),
         .CMPSrc(D_CMPSrc),
-        .CMPop(D_CMPop)
+        .CMPop(D_CMPop),
+        .T_use_rs_base(D_T_use_rs_base),
+        .T_use_rt(D_T_use_rt),
+        .T_new(D_T_new)
     );
+    wire [1:0] D_RegDst;
     wire [1:0] D_Branch;
     wire [1:0] D_Jump;
     wire [1:0] D_EXTop;
     wire D_CMPSrc;
     wire [2:0] D_CMPop;
+    wire [1:0] D_T_use_rs_base, D_T_use_rt, D_T_new;
+
+    always @(*) begin
+        case (D_RegDst)
+            `REGDST_RT: begin
+                D_REG_write_number = D_rt;
+            end
+            `REGDST_RD: begin
+                D_REG_write_number = D_rd;
+            end
+            `REGDST_RA: begin
+                D_REG_write_number = 5'd31;
+            end
+            default D_REG_write_number = 5'h1f;
+        endcase
+    end
+    reg [4:0] D_REG_write_number;
 
     // 写回阶段 Writeback 继续
     GRF DW_grf (
@@ -89,37 +134,44 @@ module mips (
     wire [31:0] D_next_PC;
     // 译码阶段 Decode 结束
 
-    DE_EX de_ex (  // DE 流水线寄存器
+    DE_REG de_reg (  // DE 流水线寄存器
         .clk(clk),
         .reset(reset),
+        .stall(stall),
         .D_PC(D_PC),
         .D_instruction(D_instruction),
         .D_rs_base_data(D_rs_base_data),
         .D_rt_data(D_rt_data),
+        .D_REG_write_number(D_REG_write_number),
         .D_EXT_result(D_EXT_result),
         .D_CMP_result(D_CMP_result),
         .E_PC(E_PC),
         .E_instruction(E_instruction),
         .E_rs_base_data(E_rs_base_data),
         .E_rt_data(E_rt_data),
+        .E_REG_write_number(E_REG_write_number),
         .E_EXT_result(E_EXT_result),
         .E_CMP_result(E_CMP_result)
     );
     wire [31:0] E_PC, E_instruction, E_rs_base_data, E_rt_data, E_EXT_result;
+    wire [4:0] E_REG_write_number;
     wire E_CMP_result;
 
     // 执行阶段 Execute 开始
-    wire [4:0] E_shamt = E_instruction[10:6];
+    wire [4:0] E_rs_base = E_instruction[25:21], E_rt = E_instruction[20:16],E_shamt = E_instruction[10:6];
 
-    Contorl E_control (  // E 控制器
+    Contorl #(`STAGE_EXECUTE) E_control (  // E 控制器
         .instruction(E_instruction),
         .ALUSrc(E_ALUSrc),
-        .ALUop(E_ALUop)
+        .ALUop(E_ALUop),
+        .T_use_rs_base(E_T_use_rs_base),
+        .T_use_rt(E_T_use_rt),
+        .T_new(E_T_new)
     );
     wire [2:0] E_ALUSrc;
     wire [3:0] E_ALUop;
+    wire [1:0] E_T_use_rs_base, E_T_use_rt, E_T_new;
 
-    reg [31:0] E_ALUoperand1, E_ALUoperand2;
     always @(*) begin
         case (E_ALUSrc[0])
             `ALUSRC1_RS: begin
@@ -146,6 +198,7 @@ module mips (
             default E_ALUoperand2 = 32'hffffffff;
         endcase
     end
+    reg [31:0] E_ALUoperand1, E_ALUoperand2;
     ALU E_alu (
         .operand1(E_ALUoperand1),
         .operand2(E_ALUoperand2),
@@ -158,22 +211,28 @@ module mips (
     EM_REG em_reg (  // EM 流水线寄存器
         .clk(clk),
         .reset(reset),
+        .flush(stall),
         .E_PC(E_PC),
         .E_instruction(E_instruction),
         .E_rt_data(E_rt_data),
+        .E_REG_write_number(E_REG_write_number),
         .E_CMP_result(E_CMP_result),
         .E_ALU_result(E_ALU_result),
         .M_PC(M_PC),
         .M_instruction(M_instruction),
         .M_rt_data(M_rt_data),
+        .M_REG_write_number(M_REG_write_number),
         .M_CMP_result(M_CMP_result),
         .M_ALU_result(M_ALU_result)
     );
     wire [31:0] M_PC, M_instruction, M_rt_data, M_ALU_result;
+    wire [4:0] M_REG_write_number;
     wire M_CMP_result;
 
     // 访存阶段 Memory 开始
-    Contorl M_control (  // M 控制器
+    wire [4:0] M_rs_base = M_instruction[25:21], M_rt = M_instruction[20:16];
+
+    Contorl #(`STAGE_MEMORY) M_control (  // M 控制器
         .instruction(M_instruction),
         .DMop(M_DMop)
     );
@@ -197,33 +256,38 @@ module mips (
         .reset(reset),
         .M_PC(M_PC),
         .M_instruction(M_instruction),
-        .MEM_read_data(M_MEM_read_data),
-        .M_ALU_result(M_ALU_result),
+        .M_REG_write_number(M_REG_write_number),
         .M_CMP_result(M_CMP_result),
+        .M_ALU_result(M_ALU_result),
+        .MEM_read_data(M_MEM_read_data),
         .W_PC(W_PC),
         .W_instruction(W_instruction),
-        .W_MEM_read_data(W_MEM_read_data),
+        .W_REG_write_number(W_REG_write_number),
+        .W_CMP_result(W_CMP_result),
         .W_ALU_result(W_ALU_result),
-        .W_CMP_result(W_CMP_result)
+        .W_MEM_read_data(W_MEM_read_data)
     );
     wire [31:0] W_PC, W_instruction, W_MEM_read_data, W_ALU_result;
+    wire [4:0] W_REG_write_number;
     wire W_CMP_result;
 
     // 写回阶段 Writeback 开始
     wire [4:0] W_rt = W_instruction[20:16], W_rd = W_instruction[15:11];
 
-    Contorl W_control (  // W 控制器
+    Contorl #(`STAGE_WRITEBACK) W_control (  // W 控制器
         .instruction(W_instruction),
         .RegDst(W_RegDst),
         .RegSrc(W_RegSrc),
         .RegWrite(W_RegWrite),
-        .Branch(W_Branch)
+        .Branch(W_Branch),
+        .T_use_rs_base(W_T_use_rs_base),
+        .T_use_rt(W_T_use_rt),
+        .T_new(W_T_new)
     );
     wire [1:0] W_RegDst, W_RegSrc;
     wire W_RegWrite, W_Branch;
+    wire [1:0] W_T_use_rs_base, W_T_use_rt, W_T_new;
 
-    reg [31:0] W_REG_write_data;
-    reg [ 4:0] W_REG_write_number;
     always @(*) begin
         case (W_RegSrc)
             `REGSRC_ALU: begin
@@ -237,18 +301,7 @@ module mips (
             end
             default W_REG_write_data = 32'hffffffff;
         endcase
-        case (W_RegDst)
-            `REGDST_RT: begin
-                W_REG_write_number = W_rt;
-            end
-            `REGDST_RD: begin
-                W_REG_write_number = W_rd;
-            end
-            `REGDST_RA: begin
-                W_REG_write_number = 5'd31;
-            end
-            default W_REG_write_number = 5'h1f;
-        endcase
     end
+    reg [31:0] W_REG_write_data;
     // 写回阶段 Writeback 继续
 endmodule

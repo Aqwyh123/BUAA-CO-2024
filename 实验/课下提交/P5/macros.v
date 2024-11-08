@@ -21,6 +21,13 @@
 `define IM_SIZE 4096
 `define DM_SIZE 3072
 
+`define STAGE_DEFAULT 0
+`define STAGE_FETCH 0
+`define STAGE_DECODE 1
+`define STAGE_EXECUTE 2
+`define STAGE_MEMORY 3
+`define STAGE_WRITEBACK 4
+
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
 `define FUNCT_MSB 5
@@ -37,6 +44,9 @@
 `define IMM_OFF_LSB 0
 `define INDEX_MSB 25
 `define INDEX_LSB 0
+
+`define T_USE_IGNORE 2'd3
+`define T_NEW_IGNORE 2'd0
 
 `define EXTOP_SIZE 2
 `define EXTOP_IGNORE 2'b00
