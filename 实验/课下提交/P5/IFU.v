@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module IFU (
     input wire clk,
     input wire reset,

@@ -1,22 +1,26 @@
 `include "macros.v"
+
 module Control (
-    input wire [5:0] opcode,
-    input wire [5:0] funct,
-    input wire [4:0] rt,
-    output reg [3:0] ALUSrc,
-    output reg [1:0] RegSrc,
-    output reg [1:0] RegDst,
-    output reg RegWrite,
-    output reg [3:0] DMop,
+    input wire [31:0] instruction,
     output reg [1:0] Branch,
     output reg [1:0] Jump,
+    output reg CMPSrc,
+    output reg [2:0] CMPop,
     output reg [1:0] EXTop,
+    output reg [2:0] ALUSrc,
     output reg [3:0] ALUop,
-    output reg [2:0] CMPop
+    output reg [3:0] DMop,
+    output reg [1:0] RegSrc,
+    output reg [1:0] RegDst,
+    output reg RegWrite
 );
+    wire opcode = instruction[31:26];
+    wire funct = instruction[5:0];
+    wire rt = instruction[20:16];
+
     always @(*) begin
         if (opcode == 6'b000000 && funct == 6'b000000 && rt == 5'b00000) begin  // nop
-            ALUSrc = 4'b0000;
+            ALUSrc = 3'b000;
             RegSrc = 3'b000;
             RegDst = 2'b00;
             RegWrite = 1'b0;
@@ -26,6 +30,7 @@ module Control (
             EXTop = 2'b00;
             ALUop = 4'b0000;
             CMPop = 2'b00;
+            CMPSrc = 1'b0;
         end else begin
             case (opcode)
                 6'b000000: begin
@@ -41,6 +46,7 @@ module Control (
                             EXTop = 2'b00;
                             ALUop = `ALUOP_ADD;
                             CMPop = 2'b00;
+                            CMPSrc = 1'b0;
                         end
                         6'b100010: begin  // sub
                             ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
@@ -53,9 +59,10 @@ module Control (
                             EXTop = 2'b00;
                             ALUop = `ALUOP_SUB;
                             CMPop = 2'b00;
+                            CMPSrc = 1'b0;
                         end
                         6'b001000: begin  // jr
-                            ALUSrc = 4'b0000;
+                            ALUSrc = 3'b000;
                             RegSrc = 3'b000;
                             RegDst = 2'b00;
                             RegWrite = 1'b0;
@@ -65,9 +72,10 @@ module Control (
                             EXTop = 2'b00;
                             ALUop = 4'b0000;
                             CMPop = 2'b00;
+                            CMPSrc = 1'b0;
                         end
                         default: begin
-                            ALUSrc = 4'b0000;
+                            ALUSrc = 3'b000;
                             RegSrc = 2'b00;
                             RegDst = 2'b00;
                             RegWrite = 1'b0;
@@ -77,6 +85,7 @@ module Control (
                             EXTop = 2'b00;
                             ALUop = 4'b0000;
                             CMPop = 2'b00;
+                            CMPSrc = 1'b0;
                         end
                     endcase
                 end
@@ -91,6 +100,7 @@ module Control (
                     EXTop = `EXTOP_ZERO;
                     ALUop = `ALUOP_OR;
                     CMPop = 2'b00;
+                    CMPSrc = 1'b0;
                 end
                 6'b100011: begin  // lw
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
@@ -103,6 +113,7 @@ module Control (
                     EXTop = `EXTOP_SIGN;
                     ALUop = `ALUOP_ADD;
                     CMPop = 2'b00;
+                    CMPSrc = 1'b0;
                 end
                 6'b101011: begin  // sw
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
@@ -115,6 +126,7 @@ module Control (
                     EXTop = `EXTOP_SIGN;
                     ALUop = `ALUOP_ADD;
                     CMPop = 2'b00;
+                    CMPSrc = 1'b0;
                 end
                 6'b000100: begin  // beq
                     ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
@@ -122,11 +134,12 @@ module Control (
                     RegDst = 2'b00;
                     RegWrite = 1'b0;
                     DMop = 4'b0000;
-                    Branch = `BRANCH;
+                    Branch = `BRANCH_COND;
                     Jump = 2'b00;
                     EXTop = 2'b00;
                     ALUop = 4'b0000;
                     CMPop = `CMPOP_EQ;
+                    CMPSrc = `CMPSRC_RT;
                 end
                 6'b001111: begin  // lui
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
@@ -139,9 +152,10 @@ module Control (
                     EXTop = `EXTOP_UPPER;
                     ALUop = `ALUOP_OR;
                     CMPop = 2'b00;
+                    CMPSrc = 1'b0;
                 end
                 6'b000011: begin  // jal
-                    ALUSrc = 4'b0000;
+                    ALUSrc = 3'b000;
                     RegSrc = `REGSRC_PC;
                     RegDst = `REGDST_RA;
                     RegWrite = 1'b1;
@@ -151,9 +165,10 @@ module Control (
                     EXTop = 2'b00;
                     ALUop = 4'b0000;
                     CMPop = 2'b00;
+                    CMPSrc = 1'b0;
                 end
                 default: begin
-                    ALUSrc = 4'b0000;
+                    ALUSrc = 3'b000;
                     RegSrc = 2'b00;
                     RegDst = 2'b00;
                     RegWrite = 1'b0;
@@ -163,6 +178,7 @@ module Control (
                     EXTop = 2'b00;
                     ALUop = 4'b0000;
                     CMPop = 2'b00;
+                    CMPSrc = 1'b0;
                 end
             endcase
         end

@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module GRF (
     input wire clk,
     input wire reset,

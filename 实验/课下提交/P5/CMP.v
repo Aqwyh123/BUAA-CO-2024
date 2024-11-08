@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module CMP (
     input wire [31:0] operand1,
     input wire [31:0] operand2,

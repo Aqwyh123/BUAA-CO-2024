@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module ALU (
     input  wire [31:0] operand1,
     input  wire [31:0] operand2,
@@ -18,7 +19,7 @@ module ALU (
             `ALUOP_SRA: result = $signed(operand1) >>> operand2[4:0];  // sra
             `ALUOP_LT: result = $signed(operand1) < $signed(operand2) ? 32'd1 : 32'd0;  // lt
             `ALUOP_LTU: result = operand1 < operand2 ? 32'd1 : 32'd0;  // ltu
-            default: result = 32'd0;
+            default: result = 32'hffffffff;
         endcase
     end
 endmodule

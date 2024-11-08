@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module PC (
     input wire clk,
     input wire reset,

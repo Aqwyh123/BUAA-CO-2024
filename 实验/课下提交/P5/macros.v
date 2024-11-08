@@ -21,10 +21,16 @@
 `define IM_SIZE 4096
 `define DM_SIZE 3072
 
+`define EXTOP_IGNORE 2'b00
 `define EXTOP_ZERO 2'b00
 `define EXTOP_SIGN 2'b01
 `define EXTOP_UPPER 2'b10
 
+`define CMPSRC_IGNORE 1'b0
+`define CMPSRC_RT 1'b0
+`define CMPSRC_ZERO 1'b1
+
+`define CMPOP_IGNORE 3'b000
 `define CMPOP_EQ 3'b000
 `define CMPOP_NE 3'b001
 `define CMPOP_LT 3'b010
@@ -33,30 +39,32 @@
 `define CMPOP_GE 3'b101
 
 `define BRANCH_DISABLE 2'b00
-`define BRANCH 2'b01
-`define BRANCH_LINK 2'b10
+`define BRANCH_COND 2'b01
+`define BRANCH_COND_LINK 2'b10
 
 `define JUMP_DISABLE 2'b00
 `define JUMP_INDEX 2'b01
 `define JUMP_REG 2'b10
 
+`define ALUSRC_IGNORE 3'b000
 `define ALUSRC1_RS 1'b0
 `define ALUSRC1_RT 1'b1
+`define ALUSRC2_RT 2'b00
+`define ALUSRC2_IMM_SHAMT 2'b01
+`define ALUSRC2_S 2'b10
+`define ALUSRC2_RS 2'b11
 
-`define ALUSRC2_RT 3'b000
-`define ALUSRC2_IMM_SHAMT 3'b001
-`define ALUSRC2_ZERO 3'b010
-`define ALUSRC2_S 3'b011
-`define ALUSRC2_RS 3'b100
-
+`define REGSRC_IGNORE 2'b00
 `define REGSRC_ALU 2'b00
 `define REGSRC_MEM 2'b01
 `define REGSRC_PC 2'b10
 
+`define REGDST_IGNORE 2'b00
 `define REGDST_RT 2'b00
 `define REGDST_RD 2'b01
 `define REGDST_RA 2'b10
 
+`define ALUOP_IGNORE 4'b0000
 `define ALUOP_ADD 4'b0000
 `define ALUOP_SUB 4'b0001
 `define ALUOP_AND 4'b0010

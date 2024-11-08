@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module FD_REG (
     input wire clk,
     input wire reset,

@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module IM (
     input  wire [31:0] ADDR,
     output wire [31:0] instruction

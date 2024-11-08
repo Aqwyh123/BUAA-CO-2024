@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module EXT (
     input  wire [15:0] operand,
     input  wire [ 1:0] operation,
@@ -9,7 +10,7 @@ module EXT (
             `EXTOP_ZERO: result = {16'd0, operand};
             `EXTOP_SIGN: result = {{16{operand[15]}}, operand};
             `EXTOP_UPPER: result = {operand, 16'd0};
-            default: result = 32'd0;
+            default: result = 32'hffffffff;
         endcase
     end
 endmodule
