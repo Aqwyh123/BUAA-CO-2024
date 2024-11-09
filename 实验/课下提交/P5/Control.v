@@ -14,7 +14,7 @@ module Control #(
     output reg [3:0] DMop,
     output reg [1:0] RegSrc,
     output reg [1:0] RegDst,
-    output reg RegWrite,
+    output reg [1:0] RegWrite,
     output reg [1:0] T_use_rs_base,
     output reg [1:0] T_use_rt,
     output reg [1:0] T_new
@@ -47,7 +47,7 @@ module Control #(
                             ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
                             RegSrc = `REGSRC_ALU;
                             RegDst = `REGDST_RD;
-                            RegWrite = `REGWRITE_ENABLE;
+                            RegWrite = `REGWRITE_NOCOND;
                             DMop = `DMOP_IGNORE;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
@@ -57,13 +57,13 @@ module Control #(
                             CMPSrc = `CMPSRC_IGNORE;
                             T_use_rs_base = 2'd1;
                             T_use_rt = 2'd1;
-                            T_new = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                            T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
                         end
                         6'b100010: begin  // sub
                             ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
                             RegSrc = `REGSRC_ALU;
                             RegDst = `REGDST_RD;
-                            RegWrite = `REGWRITE_ENABLE;
+                            RegWrite = `REGWRITE_NOCOND;
                             DMop = `DMOP_IGNORE;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
@@ -73,7 +73,7 @@ module Control #(
                             CMPSrc = `CMPSRC_IGNORE;
                             T_use_rs_base = 2'd1;
                             T_use_rt = 2'd1;
-                            T_new = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                            T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
                         end
                         6'b001000: begin  // jr
                             ALUSrc = `ALUSRC_IGNORE;
@@ -113,7 +113,7 @@ module Control #(
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
                     RegSrc = `REGSRC_ALU;
                     RegDst = `REGDST_RT;
-                    RegWrite = `REGWRITE_ENABLE;
+                    RegWrite = `REGWRITE_NOCOND;
                     DMop = `DMOP_IGNORE;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
@@ -123,13 +123,13 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = 2'd1;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
                 end
                 6'b100011: begin  // lw
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
                     RegSrc = `REGSRC_MEM;
                     RegDst = `REGDST_RT;
-                    RegWrite = `REGWRITE_ENABLE;
+                    RegWrite = `REGWRITE_NOCOND;
                     DMop = {`DMOP_WORD, `MEMREAD};
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
@@ -139,7 +139,7 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = 2'd1;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_EXECUTE ? 2'd2 : PIPELINE == `STAGE_MEMORY ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd3: PIPELINE == `STAGE_EXECUTE ? 2'd2 : PIPELINE == `STAGE_MEMORY ? 2'd1 : 2'd0;
                 end
                 6'b101011: begin  // sw
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
@@ -177,7 +177,7 @@ module Control #(
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
                     RegSrc = `REGSRC_ALU;
                     RegDst = `REGDST_RT;
-                    RegWrite = `REGWRITE_ENABLE;
+                    RegWrite = `REGWRITE_NOCOND;
                     DMop = `DMOP_IGNORE;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
@@ -187,13 +187,13 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = 2'd1;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
                 end
                 6'b000011: begin  // jal
                     ALUSrc = `ALUSRC_IGNORE;
                     RegSrc = `REGSRC_PC;
                     RegDst = `REGDST_RA;
-                    RegWrite = `REGWRITE_ENABLE;
+                    RegWrite = `REGWRITE_NOCOND;
                     DMop = `DMOP_IGNORE;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_INDEX;
@@ -203,7 +203,7 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = `T_USE_IGNORE;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = `T_NEW_IGNORE;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd1 : 2'd0;
                 end
                 default: begin
                     ALUSrc = `ALUSRC_IGNORE;

@@ -16,17 +16,11 @@
 
 `endif
 
+// 初始化与位宽定义
 `define PC_INIT 32'h00003000
 `define IM_BEGIN 3072
 `define IM_SIZE 4096
 `define DM_SIZE 3072
-
-`define STAGE_DEFAULT 0
-`define STAGE_FETCH 0
-`define STAGE_DECODE 1
-`define STAGE_EXECUTE 2
-`define STAGE_MEMORY 3
-`define STAGE_WRITEBACK 4
 
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
@@ -45,8 +39,27 @@
 `define INDEX_MSB 25
 `define INDEX_LSB 0
 
+// 控制器流水级定义
+`define STAGE_DEFAULT 0
+`define STAGE_FETCH 1
+`define STAGE_DECODE 2
+`define STAGE_EXECUTE 3
+`define STAGE_MEMORY 4
+`define STAGE_WRITEBACK 5
+
+// 控制信号定义
 `define T_USE_IGNORE 2'd3
-`define T_NEW_IGNORE 2'd0
+`define T_NEW_IGNORE 2'd3
+
+`define BRANCH_SIZE 2
+`define BRANCH_DISABLE 2'b00
+`define BRANCH_COND 2'b01
+`define BRANCH_COND_LINK 2'b10
+
+`define JUMP_SIZE 2
+`define JUMP_DISABLE 2'b00
+`define JUMP_INDEX 2'b01
+`define JUMP_REG 2'b10
 
 `define EXTOP_SIZE 2
 `define EXTOP_IGNORE 2'b00
@@ -68,16 +81,6 @@
 `define CMPOP_GT 3'b100
 `define CMPOP_GE 3'b101
 
-`define BRANCH_SIZE 2
-`define BRANCH_DISABLE 2'b00
-`define BRANCH_COND 2'b01
-`define BRANCH_COND_LINK 2'b10
-
-`define JUMP_SIZE 2
-`define JUMP_DISABLE 2'b00
-`define JUMP_INDEX 2'b01
-`define JUMP_REG 2'b10
-
 `define ALUSRC_SIZE 3
 `define ALUSRC_IGNORE 3'b000
 `define ALUSRC1_RS 1'b0
@@ -86,22 +89,6 @@
 `define ALUSRC2_IMM_SHAMT 2'b01
 `define ALUSRC2_S 2'b10
 `define ALUSRC2_RS 2'b11
-
-`define REGSRC_SIZE 2
-`define REGSRC_IGNORE 2'b00
-`define REGSRC_ALU 2'b00
-`define REGSRC_MEM 2'b01
-`define REGSRC_PC 2'b10
-
-`define REGDST_SIZE 2
-`define REGDST_IGNORE 2'b00
-`define REGDST_RT 2'b00
-`define REGDST_RD 2'b01
-`define REGDST_RA 2'b10
-
-`define REGWRITE_SIZE 1
-`define REGWRITE_DISABLE 1'b0
-`define REGWRITE_ENABLE 1'b1
 
 `define ALUOP_SIZE 4
 `define ALUOP_IGNORE 4'b0000
@@ -126,5 +113,29 @@
 `define DMOP_HALFU 3'b100
 `define MEMREAD 1'b0
 `define MEMWRITE 1'b1
+
+`define REGSRC_SIZE 2
+`define REGSRC_IGNORE 2'b00
+`define REGSRC_ALU 2'b00
+`define REGSRC_MEM 2'b01
+`define REGSRC_PC 2'b10
+
+`define REGDST_SIZE 2
+`define REGDST_IGNORE 2'b00
+`define REGDST_RT 2'b00
+`define REGDST_RD 2'b01
+`define REGDST_RA 2'b10
+
+`define REGWRITE_SIZE 2
+`define REGWRITE_DISABLE 2'b00
+`define REGWRITE_NOCOND 2'b01
+`define REGWRITE_COND 2'b10
+
+// 冒险信号定义
+`define FWD_SIZE 2
+`define FWD_DISABLE 2'b00
+`define FWD_FROM_DE_PC8 2'b01 // -> D
+`define FWD_FROM_EM_ALU 2'b10 // -> M
+`define FWD_FROM_MW_MEM 2'b01 // -> M/W
 
 `endif
