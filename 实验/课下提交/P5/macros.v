@@ -134,8 +134,8 @@
 // 冒险信号定义
 `define FWD_SIZE 2
 `define FWD_DISABLE 2'b00
-`define FWD_FROM_DE_PC8 2'b01 // -> D
-`define FWD_FROM_EM_ALU 2'b10 // -> M
-`define FWD_FROM_MW_MEM 2'b01 // -> M/W
+`define FWD_FROM_DE_PC8 2'b01 // PC8 -> D
+`define FWD_FROM_EM 2'b10 // PC8/ALU -> M
+`define FWD_FROM_MW_MEM 2'b11 // MEM -> M/W
 
 `endif

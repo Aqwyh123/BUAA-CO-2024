@@ -57,7 +57,9 @@ module Control #(
                             CMPSrc = `CMPSRC_IGNORE;
                             T_use_rs_base = 2'd1;
                             T_use_rt = 2'd1;
-                            T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                            T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : 
+                                    PIPELINE == `STAGE_EXECUTE ? 2'd1 : 
+                                    PIPELINE == `STAGE_MEMORY ? 2'd0 : 2'd0;
                         end
                         6'b100010: begin  // sub
                             ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
@@ -73,7 +75,9 @@ module Control #(
                             CMPSrc = `CMPSRC_IGNORE;
                             T_use_rs_base = 2'd1;
                             T_use_rt = 2'd1;
-                            T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                            T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : 
+                                    PIPELINE == `STAGE_EXECUTE ? 2'd1 : 
+                                    PIPELINE == `STAGE_MEMORY ? 2'd0 : 2'd0;
                         end
                         6'b001000: begin  // jr
                             ALUSrc = `ALUSRC_IGNORE;
@@ -87,7 +91,7 @@ module Control #(
                             ALUop = `ALUOP_IGNORE;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
-                            T_use_rs_base = `T_USE_IGNORE;
+                            T_use_rs_base = 2'd0;
                             T_use_rt = `T_USE_IGNORE;
                             T_new = `T_NEW_IGNORE;
                         end
@@ -123,7 +127,9 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = 2'd1;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : 
+                            PIPELINE == `STAGE_EXECUTE ? 2'd1 : 
+                            PIPELINE == `STAGE_MEMORY ? 2'd0 : 2'd0;
                 end
                 6'b100011: begin  // lw
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
@@ -139,7 +145,9 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = 2'd1;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_DECODE ? 2'd3: PIPELINE == `STAGE_EXECUTE ? 2'd2 : PIPELINE == `STAGE_MEMORY ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd3: 
+                            PIPELINE == `STAGE_EXECUTE ? 2'd2 : 
+                            PIPELINE == `STAGE_MEMORY ? 2'd1 : 2'd0;
                 end
                 6'b101011: begin  // sw
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
@@ -158,7 +166,7 @@ module Control #(
                     T_new = `T_NEW_IGNORE;
                 end
                 6'b000100: begin  // beq
-                    ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
+                    ALUSrc = `ALUSRC_IGNORE;
                     RegSrc = `REGSRC_IGNORE;
                     RegDst = `REGDST_IGNORE;
                     RegWrite = `REGWRITE_DISABLE;
@@ -169,8 +177,8 @@ module Control #(
                     ALUop = `ALUOP_IGNORE;
                     CMPop = `CMPOP_EQ;
                     CMPSrc = `CMPSRC_RT;
-                    T_use_rs_base = `T_USE_IGNORE;
-                    T_use_rt = `T_USE_IGNORE;
+                    T_use_rs_base = 2'd0;
+                    T_use_rt = 2'd0;
                     T_new = `T_NEW_IGNORE;
                 end
                 6'b001111: begin  // lui
@@ -187,7 +195,9 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = 2'd1;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd2 : 
+                            PIPELINE == `STAGE_EXECUTE ? 2'd1 : 
+                            PIPELINE == `STAGE_MEMORY ? 2'd0 : 2'd0;
                 end
                 6'b000011: begin  // jal
                     ALUSrc = `ALUSRC_IGNORE;
@@ -203,7 +213,8 @@ module Control #(
                     CMPSrc = `CMPSRC_IGNORE;
                     T_use_rs_base = `T_USE_IGNORE;
                     T_use_rt = `T_USE_IGNORE;
-                    T_new = PIPELINE == `STAGE_DECODE ? 2'd1 : 2'd0;
+                    T_new = PIPELINE == `STAGE_DECODE ? 2'd1 : 
+                            PIPELINE == `STAGE_EXECUTE ? 2'd0 : 2'd0;
                 end
                 default: begin
                     ALUSrc = `ALUSRC_IGNORE;

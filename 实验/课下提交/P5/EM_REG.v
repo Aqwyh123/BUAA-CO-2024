@@ -3,7 +3,6 @@
 module EM_REG (
     input wire clk,
     input wire reset,
-    input wire flush,
     input wire [31:0] E_instruction,
     input wire [31:0] E_PC8,
     input wire [31:0] E_rt_data,
@@ -20,12 +19,6 @@ module EM_REG (
 
     always @(posedge clk) begin
         if (reset) begin
-            M_instruction_reg <= 32'd0;
-            M_PC8_reg <= 32'd0;
-            M_rt_data_reg <= 32'd0;
-            M_CMP_result_reg <= 1'b0;
-            M_ALU_result_reg <= 32'd0;
-        end else if (flush) begin
             M_instruction_reg <= 32'd0;
             M_PC8_reg <= 32'd0;
             M_rt_data_reg <= 32'd0;

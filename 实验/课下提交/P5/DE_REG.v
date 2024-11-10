@@ -3,45 +3,52 @@
 module DE_REG (
     input wire clk,
     input wire reset,
-    input wire stall,
+    input wire flush,
     input wire [31:0] D_instruction,
     input wire [31:0] D_PC8,
     input wire [31:0] D_rs_base_data,
     input wire [31:0] D_rt_data,
     input wire [31:0] D_EXT_result,
     input wire D_CMP_result,
-    output wire [31:0] R_PC,
-    output wire [31:0] R_instruction,
-    output wire [31:0] R_PC8,
-    output wire [31:0] R_rs_base_data,
-    output wire [31:0] R_rt_data,
-    output wire [31:0] R_EXT_result,
-    output wire R_CMP_result
+    output wire [31:0] E_PC,
+    output wire [31:0] E_instruction,
+    output wire [31:0] E_PC8,
+    output wire [31:0] E_rs_base_data,
+    output wire [31:0] E_rt_data,
+    output wire [31:0] E_EXT_result,
+    output wire E_CMP_result
 );
-    reg [31:0] R_instruction_reg, R_PC8_reg, R_rs_base_data_reg, R_rt_data_reg, R_EXT_result_reg;
-    reg R_CMP_result_reg;
+    reg [31:0] E_instruction_reg, E_PC8_reg, E_rs_base_data_reg, E_rt_data_reg, E_EXT_result_reg;
+    reg E_CMP_result_reg;
 
     always @(posedge clk) begin
         if (reset) begin
-            R_instruction_reg <= 32'd0;
-            R_PC8_reg <= 32'd0;
-            R_rs_base_data_reg <= 32'd0;
-            R_rt_data_reg <= 32'd0;
-            R_EXT_result_reg <= 32'd0;
-            R_CMP_result_reg <= 1'b0;
-        end else if (!stall) begin
-            R_instruction_reg <= D_instruction;
-            R_PC8_reg <= D_PC8;
-            R_rs_base_data_reg <= D_rs_base_data;
-            R_rt_data_reg <= D_rt_data;
-            R_EXT_result_reg <= D_EXT_result;
-            R_CMP_result_reg <= D_CMP_result;
+            E_instruction_reg <= 32'd0;
+            E_PC8_reg <= 32'd0;
+            E_rs_base_data_reg <= 32'd0;
+            E_rt_data_reg <= 32'd0;
+            E_EXT_result_reg <= 32'd0;
+            E_CMP_result_reg <= 1'b0;
+        end else if (flush) begin
+            E_instruction_reg <= 32'd0;
+            E_PC8_reg <= 32'd0;
+            E_rs_base_data_reg <= 32'd0;
+            E_rt_data_reg <= 32'd0;
+            E_EXT_result_reg <= 32'd0;
+            E_CMP_result_reg <= 1'b0;
+        end else begin
+            E_instruction_reg <= D_instruction;
+            E_PC8_reg <= D_PC8;
+            E_rs_base_data_reg <= D_rs_base_data;
+            E_rt_data_reg <= D_rt_data;
+            E_EXT_result_reg <= D_EXT_result;
+            E_CMP_result_reg <= D_CMP_result;
         end
     end
-    assign R_instruction = R_instruction_reg;
-    assign R_PC8 = R_PC8_reg;
-    assign R_rs_base_data = R_rs_base_data_reg;
-    assign R_rt_data = R_rt_data_reg;
-    assign R_EXT_result = R_EXT_result_reg;
-    assign R_CMP_result = R_CMP_result_reg;
+    assign E_instruction = E_instruction_reg;
+    assign E_PC8 = E_PC8_reg;
+    assign E_rs_base_data = E_rs_base_data_reg;
+    assign E_rt_data = E_rt_data_reg;
+    assign E_EXT_result = E_EXT_result_reg;
+    assign E_CMP_result = E_CMP_result_reg;
 endmodule
