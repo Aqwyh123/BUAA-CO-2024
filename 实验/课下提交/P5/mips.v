@@ -155,7 +155,8 @@ module mips (
     wire [31:0] E_rs_base_data = FWD_to_E_rs_base == `FWD_FROM_EM ? M_FWD_data : 
                                  FWD_to_E_rs_base == `FWD_FROM_MW_MEM ? W_FWD_data : E_rs_base_data_raw;
     wire [31:0] E_rt_data = FWD_to_E_rt == `FWD_FROM_EM ? M_FWD_data : 
-                            FWD_to_E_rt == `FWD_FROM_MW_MEM ? W_FWD_data : E_rt_data_raw;
+                            FWD_to_E_rt == `FWD_FROM_MW_MEM ? W_FWD_data : 
+                            E_rt_data_raw;
 
     // 执行阶段 Execute 开始
     wire [4:0] E_rs_base = E_instruction[25:21], E_rt = E_instruction[20:16], E_rd = E_instruction[15:11], E_shamt = E_instruction[10:6];
