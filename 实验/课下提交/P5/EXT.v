@@ -1,9 +1,9 @@
 `include "macros.v"
 
 module EXT (
-    input  wire [15:0] operand,
-    input  wire [ 1:0] operation,
-    output reg  [31:0] result
+    input wire [15:0] operand,
+    input wire [`EXTOP_SIZE - 1:0] operation,
+    output reg [31:0] result
 );
     always @(*) begin
         case (operation)

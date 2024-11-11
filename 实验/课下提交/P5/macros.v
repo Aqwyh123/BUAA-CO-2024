@@ -48,13 +48,14 @@
 `define STAGE_WRITEBACK 5
 
 // 控制信号定义
-`define T_USE_IGNORE 2'd3
-`define T_NEW_IGNORE 2'd3
+`define T_SIZE 3
+`define TUSE_IGNORE 3'd3; // 0 <= Tuse <= 3
+`define TNEW_IGNORE -3'd1; // -1 <= Tnew <= 3
 
 `define BRANCH_SIZE 2
 `define BRANCH_DISABLE 2'b00
 `define BRANCH_COND 2'b01
-`define BRANCH_COND_LINK 2'b10
+`define BRANCH_UNCOND 2'b10
 
 `define JUMP_SIZE 2
 `define JUMP_DISABLE 2'b00
@@ -73,7 +74,7 @@
 `define CMPSRC_ZERO 1'b1
 
 `define CMPOP_SIZE 3
-`define CMPOP_IGNORE 3'b000
+`define CMPOP_IGNORE 3'b111
 `define CMPOP_EQ 3'b000
 `define CMPOP_NE 3'b001
 `define CMPOP_LT 3'b010
@@ -126,16 +127,14 @@
 `define REGDST_RD 2'b01
 `define REGDST_RA 2'b10
 
-`define REGWRITE_SIZE 2
-`define REGWRITE_DISABLE 2'b00
-`define REGWRITE_NOCOND 2'b01
-`define REGWRITE_COND 2'b10
+`define REGWRITE_DISABLE 1'b0
+`define REGWRITE_ALLOW 1'b1
 
 // 冒险信号定义
-`define FWD_SIZE 2
-`define FWD_DISABLE 2'b00
-`define FWD_FROM_DE_PC8 2'b01 // PC8 -> D
-`define FWD_FROM_EM 2'b10 // PC8/ALU -> M
-`define FWD_FROM_MW_MEM 2'b11 // MEM -> M/W
+`define FWD_FROM_SIZE 2
+`define FWD_FROM_DISABLE 2'b00
+`define FWD_FROM_DE 2'b01
+`define FWD_FROM_EM 2'b10
+`define FWD_FROM_MW 2'b11
 
 `endif

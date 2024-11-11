@@ -6,7 +6,7 @@ module IFU (
     input wire stall,
     input wire [31:0] next_PC,
     output wire [31:0] PC,
-    output wire [31:0] instruction
+    output wire [31:0] instr
 );
     PC pc (
         .clk(clk),
@@ -17,6 +17,6 @@ module IFU (
     );
     IM im (
         .ADDR(PC),
-        .instruction(instruction)
+        .instr(instr)
     );
 endmodule

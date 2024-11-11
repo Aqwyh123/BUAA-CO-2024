@@ -4,52 +4,60 @@ module mips (
     input wire clk,
     input wire reset
 );
+    wire [31:0] F_PC, D_PC, E_PC8, M_PC8, W_PC8;
+    wire [31:0] F_instr, D_instr, E_instr, M_instr, W_instr;
+    wire [4:0] D_rs = D_instr[25:21], D_rt = D_instr[20:16], D_rd = D_instr[15:11];
+    wire [4:0] E_rs = E_instr[25:21], E_rt = E_instr[20:16], E_rd = E_instr[15:11];
+    wire [4:0] M_rs = M_instr[25:21], M_rt = M_instr[20:16], M_rd = M_instr[15:11];
+    wire [4:0] W_rs = W_instr[25:21], W_rt = W_instr[20:16], W_rd = W_instr[15:11];
+    wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt, E_Tuse_rs, E_Tuse_rt, M_Tuse_rs, M_Tuse_rt, W_Tuse_rs, W_Tuse_rt;
+    wire signed [`T_SIZE - 1:0] E_Tnew, M_Tnew, W_Tnew;
+
     HazardControl hazard_control (
-        .D_rs_base(D_rs_base),
+        .D_rs(D_rs),
         .D_rt(D_rt),
-        .D_T_use_rs_base(D_T_use_rs_base),
-        .D_T_use_rt(D_T_use_rt),
-        .E_rs_base(E_rs_base),
+        .D_Tuse_rs(D_Tuse_rs),
+        .D_Tuse_rt(D_Tuse_rt),
+        .E_rs(E_rs),
         .E_rt(E_rt),
         .E_REG_write_number(E_REG_write_number),
         .E_REG_write_enable(E_REG_write_enable),
-        .E_T_use_rs_base(E_T_use_rs_base),
-        .E_T_use_rt(E_T_use_rt),
-        .E_T_new(E_T_new),
-        .M_rs_base(M_rs_base),
+        .E_Tuse_rs(E_Tuse_rs),
+        .E_Tuse_rt(E_Tuse_rt),
+        .E_Tnew(E_Tnew),
+        .M_rs(M_rs),
         .M_rt(M_rt),
         .M_REG_write_number(M_REG_write_number),
         .M_REG_write_enable(M_REG_write_enable),
-        .M_T_use_rs_base(M_T_use_rs_base),
-        .M_T_use_rt(M_T_use_rt),
-        .M_T_new(M_T_new),
-        .W_rs_base(W_rs_base),
+        .M_Tuse_rs(M_Tuse_rs),
+        .M_Tuse_rt(M_Tuse_rt),
+        .M_Tnew(M_Tnew),
+        .W_rs(W_rs),
         .W_rt(W_rt),
         .W_REG_write_number(W_REG_write_number),
         .W_REG_write_enable(W_REG_write_enable),
-        .W_T_use_rs_base(W_T_use_rs_base),
-        .W_T_use_rt(W_T_use_rt),
-        .W_T_new(W_T_new),
+        .W_Tuse_rs(W_Tuse_rs),
+        .W_Tuse_rt(W_Tuse_rt),
+        .W_Tnew(W_Tnew),
         .stall(stall),
-        .FWD_to_D_rs_base(FWD_to_D_rs_base),
+        .FWD_to_D_rs(FWD_to_D_rs),
         .FWD_to_D_rt(FWD_to_D_rt),
-        .FWD_to_E_rs_base(FWD_to_E_rs_base),
+        .FWD_to_E_rs(FWD_to_E_rs),
         .FWD_to_E_rt(FWD_to_E_rt),
         .FWD_to_M_rt(FWD_to_M_rt)
     );
     wire stall;
-    wire [1:0] FWD_to_D_rs_base, FWD_to_D_rt, FWD_to_E_rs_base, FWD_to_E_rt, FWD_to_M_rt;
+    wire [`FWD_FROM_SIZE - 1:0] FWD_to_D_rs, FWD_to_D_rt, FWD_to_E_rs, FWD_to_E_rt, FWD_to_M_rt;
 
     // 取指阶段 Fetch 开始
     IFU F_ifu (
         .clk(clk),
         .reset(reset),
         .stall(stall),
-        .next_PC(D_Jump || (D_Branch && D_CMP_result) ? D_next_PC : F_PC + 32'd4),
+        .next_PC(D_next_PC),
         .PC(F_PC),
-        .instruction(F_instruction)
+        .instr(F_instr)
     );
-    wire [31:0] F_PC, F_instruction;
     // 取指阶段 Fetch 结束
 
     FD_REG FD_reg (  // FD 流水线寄存器
@@ -57,37 +65,36 @@ module mips (
         .reset(reset),
         .stall(stall),
         .F_PC(F_PC),
-        .F_instruction(F_instruction),
+        .F_instr(F_instr),
         .D_PC(D_PC),
-        .D_instruction(D_instruction)
+        .D_instr(D_instr)
     );
-    wire [31:0] D_PC, D_instruction;
 
     // 译码阶段 Decode 开始
-    wire [ 4:0] D_rs_base = D_instruction[25:21], D_rt = D_instruction[20:16], D_rd = D_instruction[15:11];
-    wire [15:0] D_immediate_offset = D_instruction[15:0];
-    wire [25:0] D_instr_index_offset = D_instruction[25:0];
+    wire [15:0] D_immediate_offset = D_instr[15:0];
+    wire [25:0] D_instr_index_offset = D_instr[25:0];
 
     Control #(`STAGE_DECODE) D_control (  // D 控制器
-        .instruction(D_instruction),
+        .instr(D_instr),
         .Branch(D_Branch),
         .Jump(D_Jump),
         .EXTop(D_EXTop),
         .CMPSrc(D_CMPSrc),
         .CMPop(D_CMPop),
-        .T_use_rs_base(D_T_use_rs_base),
-        .T_use_rt(D_T_use_rt)
+        .Tuse_rs(D_Tuse_rs),
+        .Tuse_rt(D_Tuse_rt)
     );
-    wire [1:0] D_Branch, D_Jump, D_EXTop;
+    wire [`BRANCH_SIZE - 1:0] D_Branch;
+    wire [`JUMP_SIZE - 1:0] D_Jump;
+    wire [`EXTOP_SIZE - 1:0] D_EXTop;
+    wire [`CMPOP_SIZE -1:0] D_CMPop;
     wire D_CMPSrc;
-    wire [2:0] D_CMPop;
-    wire [1:0] D_T_use_rs_base, D_T_use_rt;
 
     // 写回阶段 Writeback 继续
-    GRF DW_grf (
+    GRF DW_grf (  // 同时是 D 级和 W 级的组件
         .clk(clk),
         .reset(reset),
-        .read_number1(D_rs_base),
+        .read_number1(D_rs),
         .read_number2(D_rt),
         .write_number(W_REG_write_number),
         .write_enable(W_REG_write_enable),
@@ -95,14 +102,14 @@ module mips (
 `ifdef DEBUG
         .PC(W_PC8 - 32'd8),
 `endif
-        .read_data1(D_rs_base_data_raw),
+        .read_data1(D_rs_data_raw),
         .read_data2(D_rt_data_raw)
     );
-    wire [31:0] D_rs_base_data_raw, D_rt_data_raw; // 已经经过内部转发，即 W->D ALU/MEM/PC8 转发
-    wire [31:0] D_rs_base_data = FWD_to_D_rs_base == `FWD_FROM_DE_PC8 ? E_PC8 :
-                                 FWD_to_D_rs_base == `FWD_FROM_EM ? M_FWD_data :
-                                 D_rs_base_data_raw;
-    wire [31:0] D_rt_data = FWD_to_D_rt == `FWD_FROM_DE_PC8 ? E_PC8 :
+    wire [31:0] D_rs_data_raw, D_rt_data_raw; // 已经经过内部转发，即 W->D ALU/MEM/PC8 转发
+    wire [31:0] D_rs_data = FWD_to_D_rs == `FWD_FROM_DE ? E_FWD_data :
+                            FWD_to_D_rs == `FWD_FROM_EM ? M_FWD_data :
+                            D_rs_data_raw;
+    wire [31:0] D_rt_data = FWD_to_D_rt == `FWD_FROM_DE ? E_FWD_data :
                             FWD_to_D_rt == `FWD_FROM_EM ? M_FWD_data :
                             D_rt_data_raw;
     // 写回阶段 Writeback 结束
@@ -115,19 +122,21 @@ module mips (
     wire [31:0] D_EXT_result;
 
     CMP D_cmp (
-        .operand1(D_rs_base_data),
+        .operand1(D_rs_data),
         .operand2(D_CMPSrc == `CMPSRC_RT ? D_rt_data : 32'd0),
         .operation(D_CMPop),
         .result(D_CMP_result)
     );
     wire D_CMP_result;
 
-    NPC D_npc (
-        .PC(D_PC),
+    NPC FD_npc (  // 同时是 F 级和 D 级的组件
+        .F_PC(F_PC),
+        .D_PC(D_PC),
         .instr_index_offset(D_instr_index_offset),
-        .regester(D_rs_base_data),
-        .branch(D_Branch && D_CMP_result),
+        .regester(D_rs_data),
+        .branch(D_Branch),
         .jump(D_Jump),
+        .CMP_result(D_CMP_result),
         .next_PC(D_next_PC)
     );
     wire [31:0] D_next_PC;
@@ -138,43 +147,48 @@ module mips (
         .reset(reset),
         .flush(stall),
         .D_PC8(D_PC + 32'd8),
-        .D_instruction(D_instruction),
-        .D_rs_base_data(D_rs_base_data),
+        .D_instr(D_instr),
+        .D_rs_data(D_rs_data),
         .D_rt_data(D_rt_data),
         .D_EXT_result(D_EXT_result),
         .D_CMP_result(D_CMP_result),
         .E_PC8(E_PC8),
-        .E_instruction(E_instruction),
-        .E_rs_base_data(E_rs_base_data_raw),
+        .E_instr(E_instr),
+        .E_rs_data(E_rs_data_raw),
         .E_rt_data(E_rt_data_raw),
         .E_EXT_result(E_EXT_result),
         .E_CMP_result(E_CMP_result)
     );
-    wire [31:0] E_PC8, E_instruction, E_rs_base_data_raw, E_rt_data_raw, E_EXT_result;
+    wire [31:0] E_rs_data_raw, E_rt_data_raw, E_EXT_result;
     wire E_CMP_result;
-    wire [31:0] E_rs_base_data = FWD_to_E_rs_base == `FWD_FROM_EM ? M_FWD_data : 
-                                 FWD_to_E_rs_base == `FWD_FROM_MW_MEM ? W_FWD_data : E_rs_base_data_raw;
-    wire [31:0] E_rt_data = FWD_to_E_rt == `FWD_FROM_EM ? M_FWD_data : 
-                            FWD_to_E_rt == `FWD_FROM_MW_MEM ? W_FWD_data : 
+    wire [31:0] E_rs_data = FWD_to_E_rs == `FWD_FROM_EM ? M_FWD_data :
+                            FWD_to_E_rs == `FWD_FROM_MW ? W_FWD_data :
+                            E_rs_data_raw;
+    wire [31:0] E_rt_data = FWD_to_E_rt == `FWD_FROM_EM ? M_FWD_data :
+                            FWD_to_E_rt == `FWD_FROM_MW ? W_FWD_data :
                             E_rt_data_raw;
+    wire [31:0] E_FWD_data = E_Jump == `JUMP_INDEX ? E_PC8 : E_EXT_result;
 
     // 执行阶段 Execute 开始
-    wire [4:0] E_rs_base = E_instruction[25:21], E_rt = E_instruction[20:16], E_rd = E_instruction[15:11], E_shamt = E_instruction[10:6];
+    wire [4:0] E_shamt = E_instr[10:6];
 
     Control #(`STAGE_EXECUTE) E_control (  // E 控制器
-        .instruction(E_instruction),
+        .instr(E_instr),
+        .Jump(E_Jump),
         .RegDst(E_RegDst),
         .RegWrite(E_RegWrite),
         .ALUSrc(E_ALUSrc),
         .ALUop(E_ALUop),
-        .T_use_rs_base(E_T_use_rs_base),
-        .T_use_rt(E_T_use_rt),
-        .T_new(E_T_new)
+        .Tuse_rs(E_Tuse_rs),
+        .Tuse_rt(E_Tuse_rt),
+        .Tnew(E_Tnew)
     );
-    wire [1:0] E_RegDst, E_RegWrite;
-    wire [2:0] E_ALUSrc;
-    wire [3:0] E_ALUop;
-    wire [1:0] E_T_use_rs_base, E_T_use_rt, E_T_new;
+    wire [`REGDST_SIZE - 1:0] E_RegDst;
+    wire [`JUMP_SIZE - 1:0] E_Jump;
+    wire [`ALUSRC_SIZE - 1:0] E_ALUSrc;
+    wire [`ALUOP_SIZE - 1:0] E_ALUop;
+    wire E_RegWrite;
+    wire E_REG_write_enable = E_RegWrite && E_CMP_result;
 
     always @(*) begin
         case (E_RegDst)
@@ -187,16 +201,15 @@ module mips (
             `REGDST_RA: begin
                 E_REG_write_number = 5'd31;
             end
-            default E_REG_write_number = 5'h1f;
+            default E_REG_write_number = 5'd0;
         endcase
     end
     reg [4:0] E_REG_write_number;
-    wire E_REG_write_enable = E_RegWrite != `REGWRITE_COND ? |E_RegWrite : E_CMP_result;
 
     always @(*) begin
         case (E_ALUSrc[0])
             `ALUSRC1_RS: begin
-                E_ALUoperand1 = E_rs_base_data;
+                E_ALUoperand1 = E_rs_data;
             end
             `ALUSRC1_RT: begin
                 E_ALUoperand1 = E_rt_data;
@@ -214,7 +227,7 @@ module mips (
                 E_ALUoperand2 = {27'd0, E_shamt};
             end
             `ALUSRC2_RS: begin
-                E_ALUoperand2 = E_rs_base_data;
+                E_ALUoperand2 = E_rs_data;
             end
             default E_ALUoperand2 = 32'hffffffff;
         endcase
@@ -234,36 +247,37 @@ module mips (
         .clk(clk),
         .reset(reset),
         .E_PC8(E_PC8),
-        .E_instruction(E_instruction),
+        .E_instr(E_instr),
         .E_rt_data(E_rt_data),
         .E_CMP_result(E_CMP_result),
         .E_ALU_result(E_ALU_result),
         .M_PC8(M_PC8),
-        .M_instruction(M_instruction),
+        .M_instr(M_instr),
         .M_rt_data(M_rt_data_raw),
         .M_CMP_result(M_CMP_result),
         .M_ALU_result(M_ALU_result)
     );
-    wire [31:0] M_PC8, M_instruction, M_rt_data_raw, M_ALU_result;
+    wire [31:0] M_rt_data_raw, M_ALU_result;
     wire M_CMP_result;
-    wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW_MEM ? W_FWD_data : M_rt_data_raw;
+    wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW ? W_FWD_data : M_rt_data_raw;
     wire [31:0] M_FWD_data = M_Jump == `JUMP_INDEX ? M_PC8 : M_ALU_result;
 
     // 访存阶段 Memory 开始
-    wire [4:0] M_rs_base = M_instruction[25:21], M_rt = M_instruction[20:16], M_rd = M_instruction[15:11];
-
     Control #(`STAGE_MEMORY) M_control (  // M 控制器
-        .instruction(M_instruction),
+        .instr(M_instr),
         .Jump(M_Jump),
         .RegDst(M_RegDst),
         .RegWrite(M_RegWrite),
         .DMop(M_DMop),
-        .T_use_rs_base(M_T_use_rs_base),
-        .T_use_rt(M_T_use_rt),
-        .T_new(M_T_new)
+        .Tuse_rs(M_Tuse_rs),
+        .Tuse_rt(M_Tuse_rt),
+        .Tnew(M_Tnew)
     );
-    wire [1:0] M_Jump, M_RegDst, M_RegWrite, M_T_use_rs_base, M_T_use_rt, M_T_new;
-    wire [3:0] M_DMop;
+    wire [`JUMP_SIZE - 1:0] M_Jump;
+    wire [`REGDST_SIZE - 1:0] M_RegDst;
+    wire [`DMOP_SIZE - 1:0] M_DMop;
+    wire M_RegWrite;
+    wire M_REG_write_enable = M_RegWrite && M_CMP_result;
 
     always @(*) begin
         case (M_RegDst)
@@ -276,11 +290,10 @@ module mips (
             `REGDST_RA: begin
                 M_REG_write_number = 5'd31;
             end
-            default M_REG_write_number = 5'h1f;
+            default M_REG_write_number = 5'd0;
         endcase
     end
     reg [4:0] M_REG_write_number;
-    wire M_REG_write_enable = M_RegWrite != `REGWRITE_COND ? |M_RegWrite : M_CMP_result;
 
     DM M_dm (
         .clk(clk),
@@ -300,34 +313,34 @@ module mips (
         .clk(clk),
         .reset(reset),
         .M_PC8(M_PC8),
-        .M_instruction(M_instruction),
+        .M_instr(M_instr),
         .M_CMP_result(M_CMP_result),
         .M_ALU_result(M_ALU_result),
         .M_MEM_read_data(M_MEM_read_data),
         .W_PC8(W_PC8),
-        .W_instruction(W_instruction),
+        .W_instr(W_instr),
         .W_CMP_result(W_CMP_result),
         .W_ALU_result(W_ALU_result),
         .W_MEM_read_data(W_MEM_read_data)
     );
-    wire [31:0] W_PC8, W_instruction, W_MEM_read_data, W_ALU_result;
+    wire [31:0] W_MEM_read_data, W_ALU_result;
     wire W_CMP_result;
     wire [31:0] W_FWD_data = W_REG_write_data;
 
     // 写回阶段 Writeback 开始
-    wire [4:0] W_rs_base = W_instruction[25:21], W_rt = W_instruction[20:16], W_rd = W_instruction[15:11];
-
     Control #(`STAGE_WRITEBACK) W_control (  // W 控制器
-        .instruction(W_instruction),
+        .instr(W_instr),
         .RegDst(W_RegDst),
         .RegSrc(W_RegSrc),
         .RegWrite(W_RegWrite),
-        .T_use_rs_base(W_T_use_rs_base),
-        .T_use_rt(W_T_use_rt),
-        .T_new(W_T_new)
+        .Tuse_rs(W_Tuse_rs),
+        .Tuse_rt(W_Tuse_rt),
+        .Tnew(W_Tnew)
     );
-    wire [1:0] W_RegDst, W_RegSrc, W_RegWrite;
-    wire [1:0] W_T_use_rs_base, W_T_use_rt, W_T_new;
+    wire [`REGDST_SIZE - 1:0] W_RegDst;
+    wire [`REGSRC_SIZE - 1:0] W_RegSrc;
+    wire W_RegWrite;
+    wire W_REG_write_enable = W_RegWrite && W_CMP_result;
 
     always @(*) begin
         case (W_RegDst)
@@ -340,11 +353,10 @@ module mips (
             `REGDST_RA: begin
                 W_REG_write_number = 5'd31;
             end
-            default W_REG_write_number = 5'h1f;
+            default W_REG_write_number = 5'd0;
         endcase
     end
     reg [4:0] W_REG_write_number;
-    wire W_REG_write_enable = W_RegWrite != `REGWRITE_COND ? |W_RegWrite : W_CMP_result;
 
     always @(*) begin
         case (W_RegSrc)

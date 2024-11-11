@@ -5,22 +5,22 @@ module FD_REG (
     input wire reset,
     input wire stall,
     input wire [31:0] F_PC,
-    input wire [31:0] F_instruction,
+    input wire [31:0] F_instr,
     output wire [31:0] D_PC,
-    output wire [31:0] D_instruction
+    output wire [31:0] D_instr
 );
-    reg [31:0] D_PC_reg, D_instruction_reg;
+    reg [31:0] D_PC_reg, D_instr_reg;
 
     always @(posedge clk) begin
         if (reset) begin
-            D_PC_reg <= 32'b0;
-            D_instruction_reg <= 32'b0;
+            D_PC_reg <= 32'd0;
+            D_instr_reg <= 32'd0;
         end else if (!stall) begin
             D_PC_reg <= F_PC;
-            D_instruction_reg <= F_instruction;
+            D_instr_reg <= F_instr;
         end
     end
 
     assign D_PC = D_PC_reg;
-    assign D_instruction = D_instruction_reg;
+    assign D_instr = D_instr_reg;
 endmodule

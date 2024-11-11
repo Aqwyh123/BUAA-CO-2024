@@ -7,13 +7,13 @@ module PC (
     input wire [31:0] next_PC,
     output wire [31:0] PC
 );
-    reg [31:0] regester;
+    reg [31:0] PC_reg;
     always @(posedge clk) begin
         if (reset) begin
-            regester <= `PC_INIT;
-        end else if(!stall)begin
-            regester <= next_PC;
+            PC_reg <= `PC_INIT;
+        end else if (!stall) begin
+            PC_reg <= next_PC;
         end
     end
-    assign PC = regester;
+    assign PC = PC_reg;
 endmodule

@@ -5,7 +5,7 @@ module DM (
     input wire reset,
     input wire [31:0] ADDR,
     input wire [31:0] write_data_raw,
-    input wire [3:0] operation,
+    input wire [`DMOP_SIZE - 1:0] operation,
 `ifdef DEBUG
     input wire [31:0] PC,
 `endif
@@ -19,8 +19,8 @@ module DM (
 
     reg [31:0] memory[0:`DM_SIZE - 1];
 
-// 读取
-    wire [31:0] read_raw_data = memory[ADDR>>2]; // 原始读取数据
+    // 读取
+    wire [31:0] read_raw_data = memory[ADDR>>2];  // 原始读取数据
     always @(*) begin
         case (operation[3:1])
             `DMOP_WORD: read_data = read_raw_data;
@@ -60,7 +60,7 @@ module DM (
         endcase
     end
 
-// 写入
+    // 写入
     integer i;
     always @(posedge clk) begin
         if (reset) begin
