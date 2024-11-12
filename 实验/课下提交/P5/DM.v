@@ -18,6 +18,12 @@ module DM (
 `endif
 
     reg [31:0] memory[0:`DM_SIZE - 1];
+`ifdef DEBUG
+    integer j;
+    initial begin
+        for (j = 0; j < `DM_SIZE; j = j + 1) memory[j] = 32'h00000000;
+    end
+`endif
 
     // 读取
     wire [31:0] read_raw_data = memory[ADDR>>2];  // 原始读取数据

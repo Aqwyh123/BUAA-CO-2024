@@ -15,6 +15,7 @@
 !*.png
 
 !*.sh
+!*.wcfg
 
 !实验/课下提交/P3/P3_testcode.txt
 !实验/课下提交/P4/code.txt

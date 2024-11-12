@@ -4,20 +4,13 @@ module IM (
     input  wire [31:0] ADDR,
     output wire [31:0] instr
 );
-`ifdef DEBUG
-`ifdef LOCAL
-    integer fd;
-`endif
-`endif
 
     reg [31:0] ROM[`IM_BEGIN:`IM_BEGIN + `IM_SIZE - 1];
 `ifdef DEBUG
+    integer i;
     initial begin
+        for (i = `IM_BEGIN; i < `IM_BEGIN + `IM_SIZE; i = i + 1) ROM[i] = 32'h00000000;
         $readmemh(`INPUT_PATH, ROM);
-`ifdef LOCAL
-        fd = $fopen(`OUTPUT_PATH, "w");
-        $fclose(fd);
-`endif
     end
 `endif
     assign instr = ROM[ADDR>>2];
