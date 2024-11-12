@@ -52,12 +52,10 @@
 `define TUSE_IGNORE 3'd3; // 0 <= Tuse <= 3
 `define TNEW_IGNORE -3'd1; // -1 <= Tnew <= 3
 
-`define BRANCH_SIZE 3
-`define BRANCH_DISABLE 3'b000
-`define BRANCH_UNLIKELY 3'b001
-`define BRANCH_UNLIKELY_LINK 3'b010
-`define BRANCH_LIKELY 3'b011
-`define BRANCH_LIKELY_LINK 3'b100
+`define BRANCH_SIZE 2
+`define BRANCH_DISABLE 2'b00
+`define BRANCH_UNLIKELY 2'b01
+`define BRANCH_LIKELY 2'b10
 
 `define JUMP_SIZE 2
 `define JUMP_DISABLE 2'b00
@@ -76,7 +74,7 @@
 `define CMPSRC_ZERO 1'b1
 
 `define CMPOP_SIZE 3
-`define CMPOP_IGNORE 3'b111
+`define CMPOP_IGNORE 3'b000
 `define CMPOP_EQ 3'b000
 `define CMPOP_NE 3'b001
 `define CMPOP_LT 3'b010
@@ -105,7 +103,7 @@
 `define ALUOP_SRL 4'b0111
 `define ALUOP_SRA 4'b1000
 `define ALUOP_LT 4'b1001
-`define ALUOP_LTU 4'b1011
+`define ALUOP_LTU 4'b1010
 
 `define DMOP_SIZE 4
 `define DMOP_IGNORE 4'b0000

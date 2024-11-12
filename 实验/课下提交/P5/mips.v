@@ -10,7 +10,12 @@ module mips (
     wire [4:0] E_rs = E_instr[25:21], E_rt = E_instr[20:16], E_rd = E_instr[15:11];
     wire [4:0] M_rs = M_instr[25:21], M_rt = M_instr[20:16], M_rd = M_instr[15:11];
     wire [4:0] W_rs = W_instr[25:21], W_rt = W_instr[20:16], W_rd = W_instr[15:11];
-    wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt, E_Tuse_rs, E_Tuse_rt, M_Tuse_rs, M_Tuse_rt, W_Tuse_rs, W_Tuse_rt;
+    reg [4:0] E_REG_write_number, M_REG_write_number, W_REG_write_number;
+    wire E_RegWrite, M_RegWrite, W_RegWrite;
+    wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt,
+                                E_Tuse_rs, E_Tuse_rt,
+                                M_Tuse_rs, M_Tuse_rt,
+                                W_Tuse_rs, W_Tuse_rt;
     wire signed [`T_SIZE - 1:0] E_Tnew, M_Tnew, W_Tnew;
 `ifdef DEBUG
 `ifdef LOCAL
@@ -28,21 +33,21 @@ module mips (
         .E_rs(E_rs),
         .E_rt(E_rt),
         .E_REG_write_number(E_REG_write_number),
-        .E_REG_write_enable(E_REG_write_enable),
+        .E_REG_write_enable(E_RegWrite),
         .E_Tuse_rs(E_Tuse_rs),
         .E_Tuse_rt(E_Tuse_rt),
         .E_Tnew(E_Tnew),
         .M_rs(M_rs),
         .M_rt(M_rt),
         .M_REG_write_number(M_REG_write_number),
-        .M_REG_write_enable(M_REG_write_enable),
+        .M_REG_write_enable(M_RegWrite),
         .M_Tuse_rs(M_Tuse_rs),
         .M_Tuse_rt(M_Tuse_rt),
         .M_Tnew(M_Tnew),
         .W_rs(W_rs),
         .W_rt(W_rt),
         .W_REG_write_number(W_REG_write_number),
-        .W_REG_write_enable(W_REG_write_enable),
+        .W_REG_write_enable(W_RegWrite),
         .W_Tuse_rs(W_Tuse_rs),
         .W_Tuse_rt(W_Tuse_rt),
         .W_Tnew(W_Tnew),
@@ -71,7 +76,7 @@ module mips (
         .clk(clk),
         .reset(reset),
         .stall(stall),
-        .flush(D_Branch == `BRANCH_LIKELY_LINK && !D_CMP_result),
+        .flush(D_Branch == `BRANCH_LIKELY && !D_CMP_result),
         .F_PC(F_PC),
         .F_instr(F_instr),
         .D_PC(D_PC),
@@ -105,7 +110,7 @@ module mips (
         .read_number1(D_rs),
         .read_number2(D_rt),
         .write_number(W_REG_write_number),
-        .write_enable(W_REG_write_enable),
+        .write_enable(W_RegWrite),
         .write_data(W_REG_write_data),
 `ifdef DEBUG
         .PC(W_PC8 - 32'd8),
@@ -160,16 +165,13 @@ module mips (
         .D_rs_data(D_rs_data),
         .D_rt_data(D_rt_data),
         .D_EXT_result(D_EXT_result),
-        .D_CMP_result(D_CMP_result),
         .E_PC8(E_PC8),
         .E_instr(E_instr),
         .E_rs_data(E_rs_data_raw),
         .E_rt_data(E_rt_data_raw),
-        .E_EXT_result(E_EXT_result),
-        .E_CMP_result(E_CMP_result)
+        .E_EXT_result(E_EXT_result)
     );
     wire [31:0] E_rs_data_raw, E_rt_data_raw, E_EXT_result;
-    wire E_CMP_result;
     wire [31:0] E_rs_data = FWD_to_E_rs == `FWD_FROM_EM ? M_FWD_data :
                             FWD_to_E_rs == `FWD_FROM_MW ? W_FWD_data :
                             E_rs_data_raw;
@@ -193,11 +195,9 @@ module mips (
         .Tnew(E_Tnew)
     );
     wire [`REGDST_SIZE - 1:0] E_RegDst;
-    wire [`JUMP_SIZE - 1:0] E_Jump;
+    wire [  `JUMP_SIZE - 1:0] E_Jump;
     wire [`ALUSRC_SIZE - 1:0] E_ALUSrc;
-    wire [`ALUOP_SIZE - 1:0] E_ALUop;
-    wire E_RegWrite;
-    wire E_REG_write_enable = E_RegWrite && E_CMP_result;
+    wire [ `ALUOP_SIZE - 1:0] E_ALUop;
 
     always @(*) begin
         case (E_RegDst)
@@ -213,7 +213,6 @@ module mips (
             default E_REG_write_number = 5'd0;
         endcase
     end
-    reg [4:0] E_REG_write_number;
 
     always @(*) begin
         case (E_ALUSrc[0])
@@ -259,16 +258,13 @@ module mips (
         .E_PC8(E_PC8),
         .E_instr(E_instr),
         .E_rt_data(E_rt_data),
-        .E_CMP_result(E_CMP_result),
         .E_ALU_result(E_ALU_result),
         .M_PC8(M_PC8),
         .M_instr(M_instr),
         .M_rt_data(M_rt_data_raw),
-        .M_CMP_result(M_CMP_result),
         .M_ALU_result(M_ALU_result)
     );
     wire [31:0] M_rt_data_raw, M_ALU_result;
-    wire M_CMP_result;
     wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW ? W_FWD_data : M_rt_data_raw;
     wire [31:0] M_FWD_data = M_Jump == `JUMP_INDEX ? M_PC8 : M_ALU_result;
 
@@ -283,11 +279,9 @@ module mips (
         .Tuse_rt(M_Tuse_rt),
         .Tnew(M_Tnew)
     );
-    wire [`JUMP_SIZE - 1:0] M_Jump;
+    wire [  `JUMP_SIZE - 1:0] M_Jump;
     wire [`REGDST_SIZE - 1:0] M_RegDst;
-    wire [`DMOP_SIZE - 1:0] M_DMop;
-    wire M_RegWrite;
-    wire M_REG_write_enable = M_RegWrite && M_CMP_result;
+    wire [  `DMOP_SIZE - 1:0] M_DMop;
 
     always @(*) begin
         case (M_RegDst)
@@ -303,7 +297,6 @@ module mips (
             default M_REG_write_number = 5'd0;
         endcase
     end
-    reg [4:0] M_REG_write_number;
 
     DM M_dm (
         .clk(clk),
@@ -325,17 +318,14 @@ module mips (
         .stall(1'b0),
         .M_PC8(M_PC8),
         .M_instr(M_instr),
-        .M_CMP_result(M_CMP_result),
         .M_ALU_result(M_ALU_result),
         .M_MEM_read_data(M_MEM_read_data),
         .W_PC8(W_PC8),
         .W_instr(W_instr),
-        .W_CMP_result(W_CMP_result),
         .W_ALU_result(W_ALU_result),
         .W_MEM_read_data(W_MEM_read_data)
     );
     wire [31:0] W_MEM_read_data, W_ALU_result;
-    wire W_CMP_result;
     wire [31:0] W_FWD_data = W_REG_write_data;
 
     // 写回阶段 Writeback 开始
@@ -350,8 +340,6 @@ module mips (
     );
     wire [`REGDST_SIZE - 1:0] W_RegDst;
     wire [`REGSRC_SIZE - 1:0] W_RegSrc;
-    wire W_RegWrite;
-    wire W_REG_write_enable = W_RegWrite && W_CMP_result;
 
     always @(*) begin
         case (W_RegDst)
@@ -367,7 +355,6 @@ module mips (
             default W_REG_write_number = 5'd0;
         endcase
     end
-    reg [4:0] W_REG_write_number;
 
     always @(*) begin
         case (W_RegSrc)

@@ -17,7 +17,8 @@ module NPC (
             `JUMP_DISABLE: begin
                 if (branch == `BRANCH_DISABLE) next_PC = F_PC + 32'd4;
                 else
-                    next_PC = CMP_result ? D_PC + 32'd4 + ({{16{offset[15]}}, offset} << 2) : F_PC + 32'd4;
+                    next_PC = CMP_result ? D_PC + 32'd4 + ({{16{offset[15]}}, offset} << 2) :
+                                           F_PC + 32'd4;
             end
             `JUMP_INDEX: next_PC = {D_PC[31:28], instr_index_offset, 2'b00};
             `JUMP_REG: next_PC = regester;

@@ -14,7 +14,7 @@ module CMP (
             `CMPOP_LE: result = operand1 <= operand2;
             `CMPOP_GT: result = operand1 > operand2;
             `CMPOP_GE: result = operand1 >= operand2;
-            default:   result = 1'b1;
+            default:   result = 1'b0;
         endcase
     end
 endmodule

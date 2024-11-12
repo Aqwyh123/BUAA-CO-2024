@@ -15,8 +15,10 @@ module GRF (
     output wire [31:0] read_data2
 );
     reg [31:0] regfile[0:31];
-    assign read_data1 = write_enable && write_number != 5'd0 && read_number1 == write_number ? write_data : regfile[read_number1];
-    assign read_data2 = write_enable && write_number != 5'd0 && read_number2 == write_number ? write_data : regfile[read_number2];
+    assign read_data1 = write_enable && write_number != 5'd0 &&
+                        read_number1 == write_number ? write_data : regfile[read_number1];
+    assign read_data2 = write_enable && write_number != 5'd0 &&
+                        read_number2 == write_number ? write_data : regfile[read_number2];
 `ifdef DEBUG
 `ifdef LOCAL
     integer fd;

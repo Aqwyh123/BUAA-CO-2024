@@ -32,15 +32,24 @@ module HazardControl (
     output wire [`FWD_FROM_SIZE - 1:0] FWD_to_E_rt,
     output wire [`FWD_FROM_SIZE - 1:0] FWD_to_M_rt
 );
-    wire E_to_D_A_rs = E_REG_write_enable && E_REG_write_number == D_rs && E_REG_write_number != 5'd0 && D_Tuse_rs != `TUSE_IGNORE;
-    wire E_to_D_A_rt = E_REG_write_enable && E_REG_write_number == D_rt && E_REG_write_number != 5'd0 && D_Tuse_rt != `TUSE_IGNORE;
-    wire M_to_D_A_rs = M_REG_write_enable && M_REG_write_number == D_rs && M_REG_write_number != 5'd0 && D_Tuse_rs != `TUSE_IGNORE;
-    wire M_to_D_A_rt = M_REG_write_enable && M_REG_write_number == D_rt && M_REG_write_number != 5'd0 && D_Tuse_rt != `TUSE_IGNORE;
-    wire M_to_E_A_rs = M_REG_write_enable && M_REG_write_number == E_rs && M_REG_write_number != 5'd0 && E_Tuse_rs != `TUSE_IGNORE;
-    wire M_to_E_A_rt = M_REG_write_enable && M_REG_write_number == E_rt && M_REG_write_number != 5'd0 && E_Tuse_rt != `TUSE_IGNORE;
-    wire W_to_E_A_rs = W_REG_write_enable && W_REG_write_number == E_rs && W_REG_write_number != 5'd0 && E_Tuse_rs != `TUSE_IGNORE;
-    wire W_to_E_A_rt = W_REG_write_enable && W_REG_write_number == E_rt && W_REG_write_number != 5'd0 && E_Tuse_rt != `TUSE_IGNORE;
-    wire W_to_M_A_rt = W_REG_write_enable && W_REG_write_number == M_rt && W_REG_write_number != 5'd0 && M_Tuse_rt != `TUSE_IGNORE;
+    wire E_to_D_A_rs = E_REG_write_enable && E_REG_write_number != 5'd0 &&
+                       E_REG_write_number == D_rs &&  D_Tuse_rs != `TUSE_IGNORE;
+    wire E_to_D_A_rt = E_REG_write_enable && E_REG_write_number != 5'd0 &&
+                       E_REG_write_number == D_rt &&  D_Tuse_rt != `TUSE_IGNORE;
+    wire M_to_D_A_rs = M_REG_write_enable && M_REG_write_number != 5'd0 &&
+                       M_REG_write_number == D_rs &&  D_Tuse_rs != `TUSE_IGNORE;
+    wire M_to_D_A_rt = M_REG_write_enable && M_REG_write_number != 5'd0 &&
+                       M_REG_write_number == D_rt &&  D_Tuse_rt != `TUSE_IGNORE;
+    wire M_to_E_A_rs = M_REG_write_enable && M_REG_write_number != 5'd0 &&
+                       M_REG_write_number == E_rs &&  E_Tuse_rs != `TUSE_IGNORE;
+    wire M_to_E_A_rt = M_REG_write_enable && M_REG_write_number != 5'd0 &&
+                       M_REG_write_number == E_rt &&  E_Tuse_rt != `TUSE_IGNORE;
+    wire W_to_E_A_rs = W_REG_write_enable && W_REG_write_number != 5'd0 &&
+                       W_REG_write_number == E_rs &&  E_Tuse_rs != `TUSE_IGNORE;
+    wire W_to_E_A_rt = W_REG_write_enable && W_REG_write_number != 5'd0 &&
+                       W_REG_write_number == E_rt &&  E_Tuse_rt != `TUSE_IGNORE;
+    wire W_to_M_A_rt = W_REG_write_enable && W_REG_write_number != 5'd0 &&
+                       W_REG_write_number == M_rt &&  M_Tuse_rt != `TUSE_IGNORE;
 
     wire E_stall_rs = E_to_D_A_rs && E_Tnew > D_Tuse_rs;
     wire E_stall_rt = E_to_D_A_rt && E_Tnew > D_Tuse_rt;

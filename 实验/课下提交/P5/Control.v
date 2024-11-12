@@ -1,7 +1,7 @@
 `include "macros.v"
 
 module Control #(
-    parameter PIPELINE = `STAGE_DEFAULT
+    parameter integer PIPELINE = `STAGE_DEFAULT
 ) (
     input wire [31:0] instr,
     output reg [`BRANCH_SIZE - 1:0] Branch,

@@ -30,14 +30,14 @@ module DM (
                     2'b01: read_data = {{24{read_raw_data[15]}}, read_raw_data[15:8]};
                     2'b10: read_data = {{24{read_raw_data[23]}}, read_raw_data[23:16]};
                     2'b11: read_data = {{24{read_raw_data[31]}}, read_raw_data[31:24]};
-                    default read_data = 32'hffffffff;
+                    default read_data = 32'hxxxxxxxx;
                 endcase
             end
             `DMOP_HALF: begin
                 case (ADDR[1:0])
                     2'b00: read_data = {{16{read_raw_data[15]}}, read_raw_data[15:0]};
                     2'b10: read_data = {{16{read_raw_data[31]}}, read_raw_data[31:16]};
-                    default read_data = 32'hffffffff;
+                    default read_data = 32'hxxxxxxxx;
                 endcase
             end
             `DMOP_BYTEU: begin
@@ -46,17 +46,17 @@ module DM (
                     2'b01: read_data = {24'd0, read_raw_data[15:8]};
                     2'b10: read_data = {24'd0, read_raw_data[23:16]};
                     2'b11: read_data = {24'd0, read_raw_data[31:24]};
-                    default read_data = 32'hffffffff;
+                    default read_data = 32'hxxxxxxxx;
                 endcase
             end
             `DMOP_HALFU: begin
                 case (ADDR[1:0])
                     2'b00: read_data = {16'd0, read_raw_data[15:0]};
                     2'b10: read_data = {16'd0, read_raw_data[31:16]};
-                    default read_data = 32'hffffffff;
+                    default read_data = 32'hxxxxxxxx;
                 endcase
             end
-            default read_data = 32'hffffffff;
+            default read_data = 32'hxxxxxxxx;
         endcase
     end
 
@@ -64,9 +64,7 @@ module DM (
     integer i;
     always @(posedge clk) begin
         if (reset) begin
-            for (i = 0; i < `DM_SIZE; i = i + 1) begin
-                memory[i] <= 32'd0;
-            end
+            for (i = 0; i < `DM_SIZE; i = i + 1) memory[i] <= 32'd0;
         end else if (operation[0]) begin
             case (operation[3:1])
                 `DMOP_WORD: begin
@@ -87,6 +85,8 @@ module DM (
                         2'b01: memory[ADDR>>2][15:8] <= write_data_raw[7:0];
                         2'b10: memory[ADDR>>2][23:16] <= write_data_raw[7:0];
                         2'b11: memory[ADDR>>2][31:24] <= write_data_raw[7:0];
+                        default: begin
+                        end
                     endcase
 `ifdef DEBUG
                     $display("%d@%h: *%h <= %h", $time, PC, {ADDR[31:2], 2'b00},
@@ -103,6 +103,8 @@ module DM (
                     case (ADDR[1:0])
                         2'b00: memory[ADDR>>2][15:0] <= write_data_raw[15:0];
                         2'b10: memory[ADDR>>2][31:16] <= write_data_raw[15:0];
+                        default: begin
+                        end
                     endcase
 `ifdef DEBUG
                     $display("%d@%h: *%h <= %h", $time, PC, {ADDR[31:2], 2'b00},
@@ -114,6 +116,8 @@ module DM (
                     $fclose(fd);
 `endif
 `endif
+                end
+                default: begin
                 end
             endcase
         end
