@@ -12,6 +12,13 @@ module mips (
     wire [4:0] W_rs = W_instr[25:21], W_rt = W_instr[20:16], W_rd = W_instr[15:11];
     wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt, E_Tuse_rs, E_Tuse_rt, M_Tuse_rs, M_Tuse_rt, W_Tuse_rs, W_Tuse_rt;
     wire signed [`T_SIZE - 1:0] E_Tnew, M_Tnew, W_Tnew;
+`ifdef DEBUG
+`ifdef LOCAL
+    wire [31:0] E_PC = E_PC8 >= 32'h00003008 ? E_PC8 - 32'd8 : 32'h00000000;
+    wire [31:0] M_PC = M_PC8 >= 32'h00003008 ? M_PC8 - 32'd8 : 32'h00000000;
+    wire [31:0] W_PC = W_PC8 >= 32'h00003008 ? W_PC8 - 32'd8 : 32'h00000000;
+`endif
+`endif
 
     HazardControl hazard_control (
         .D_rs(D_rs),
