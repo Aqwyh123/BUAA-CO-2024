@@ -3,6 +3,7 @@
 module DE_REG (
     input wire clk,
     input wire reset,
+    input wire stall,
     input wire flush,
     input wire [31:0] D_instr,
     input wire [31:0] D_PC8,
@@ -20,6 +21,12 @@ module DE_REG (
 );
     reg [31:0] E_instr_reg, E_PC8_reg, E_rs_data_reg, E_rt_data_reg, E_EXT_result_reg;
     reg E_CMP_result_reg;
+    assign E_instr = E_instr_reg;
+    assign E_PC8 = E_PC8_reg;
+    assign E_rs_data = E_rs_data_reg;
+    assign E_rt_data = E_rt_data_reg;
+    assign E_EXT_result = E_EXT_result_reg;
+    assign E_CMP_result = E_CMP_result_reg;
 
     always @(posedge clk) begin
         if (reset) begin
@@ -29,6 +36,13 @@ module DE_REG (
             E_rt_data_reg <= 32'd0;
             E_EXT_result_reg <= 32'd0;
             E_CMP_result_reg <= 1'b0;
+        end else if (stall) begin
+            E_instr_reg <= E_instr_reg;
+            E_PC8_reg <= E_PC8_reg;
+            E_rs_data_reg <= E_rs_data_reg;
+            E_rt_data_reg <= E_rt_data_reg;
+            E_EXT_result_reg <= E_EXT_result_reg;
+            E_CMP_result_reg <= E_CMP_result_reg;
         end else if (flush) begin
             E_instr_reg <= 32'd0;
             E_PC8_reg <= 32'd0;
@@ -45,10 +59,4 @@ module DE_REG (
             E_CMP_result_reg <= D_CMP_result;
         end
     end
-    assign E_instr = E_instr_reg;
-    assign E_PC8 = E_PC8_reg;
-    assign E_rs_data = E_rs_data_reg;
-    assign E_rt_data = E_rt_data_reg;
-    assign E_EXT_result = E_EXT_result_reg;
-    assign E_CMP_result = E_CMP_result_reg;
 endmodule

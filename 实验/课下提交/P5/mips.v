@@ -71,6 +71,7 @@ module mips (
         .clk(clk),
         .reset(reset),
         .stall(stall),
+        .flush(D_Branch == `BRANCH_LIKELY_LINK && !D_CMP_result),
         .F_PC(F_PC),
         .F_instr(F_instr),
         .D_PC(D_PC),
@@ -152,6 +153,7 @@ module mips (
     DE_REG DE_reg (  // DE 流水线寄存器
         .clk(clk),
         .reset(reset),
+        .stall(1'b0),
         .flush(stall),
         .D_PC8(D_PC + 32'd8),
         .D_instr(D_instr),
@@ -253,6 +255,7 @@ module mips (
     EM_REG EM_reg (  // EM 流水线寄存器
         .clk(clk),
         .reset(reset),
+        .stall(1'b0),
         .E_PC8(E_PC8),
         .E_instr(E_instr),
         .E_rt_data(E_rt_data),
@@ -319,6 +322,7 @@ module mips (
     MW_REG MW_reg (  // MW 流水线寄存器
         .clk(clk),
         .reset(reset),
+        .stall(1'b0),
         .M_PC8(M_PC8),
         .M_instr(M_instr),
         .M_CMP_result(M_CMP_result),

@@ -52,10 +52,12 @@
 `define TUSE_IGNORE 3'd3; // 0 <= Tuse <= 3
 `define TNEW_IGNORE -3'd1; // -1 <= Tnew <= 3
 
-`define BRANCH_SIZE 2
-`define BRANCH_DISABLE 2'b00
-`define BRANCH_COND 2'b01
-`define BRANCH_UNCOND 2'b10
+`define BRANCH_SIZE 3
+`define BRANCH_DISABLE 3'b000
+`define BRANCH_UNLIKELY 3'b001
+`define BRANCH_UNLIKELY_LINK 3'b010
+`define BRANCH_LIKELY 3'b011
+`define BRANCH_LIKELY_LINK 3'b100
 
 `define JUMP_SIZE 2
 `define JUMP_DISABLE 2'b00

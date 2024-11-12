@@ -168,7 +168,7 @@ module Control #(
                     RegDst = `REGDST_IGNORE;
                     RegWrite = `REGWRITE_DISABLE;
                     DMop = `DMOP_IGNORE;
-                    Branch = `BRANCH_COND;
+                    Branch = `BRANCH_UNLIKELY;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_IGNORE;
                     ALUop = `ALUOP_IGNORE;
