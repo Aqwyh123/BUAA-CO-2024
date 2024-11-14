@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="/home/Aqwyh/Documents/cpu_checker/tb_isim_beh.wdb" id="1" type="auto">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <WVObjectSize size="14" />
+   <wvobject fp_name="/tb/clk" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/reset" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/char" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">char[7:0]</obj_property>
+      <obj_property name="ObjectShortName">char[7:0]</obj_property>
+      <obj_property name="Radix">ASCIIRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/state" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">state[3:0]</obj_property>
+      <obj_property name="ObjectShortName">state[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/next_state" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">next_state[3:0]</obj_property>
+      <obj_property name="ObjectShortName">next_state[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/format_type" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">format_type[1:0]</obj_property>
+      <obj_property name="ObjectShortName">format_type[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/time_count" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">time_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">time_count[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/pc_count" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">pc_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">pc_count[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/data_count" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">data_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">data_count[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/grf_or_addr_count" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">grf_or_addr_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">grf_or_addr_count[31:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/uut/grf_or_addr" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">grf_or_addr[1:0]</obj_property>
+      <obj_property name="ObjectShortName">grf_or_addr[1:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/freq" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">freq[15:0]</obj_property>
+      <obj_property name="ObjectShortName">freq[15:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/error_code" type="array" db_ref_id="1">
+      <obj_property name="ElementShortName">error_code[3:0]</obj_property>
+      <obj_property name="ObjectShortName">error_code[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb/finish" type="logic" db_ref_id="1">
+      <obj_property name="ElementShortName">finish</obj_property>
+      <obj_property name="ObjectShortName">finish</obj_property>
+   </wvobject>
+</wave_config>
