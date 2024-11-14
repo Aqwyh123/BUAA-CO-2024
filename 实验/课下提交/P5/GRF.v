@@ -28,13 +28,13 @@ module GRF (
     always @(posedge clk) begin
         if (reset) begin
             for (i = 0; i < 32; i = i + 1) regfile[i] <= 32'd0;
-        end else if (write_enable) begin
-            regfile[write_number] <= write_number == 5'd0 ? 32'd0 : write_data;
+        end else if (write_enable && write_number != 5'd0) begin
+            regfile[write_number] <= write_data;
 `ifdef DEBUG
             $display("%d@%h: $%d <= %h", $time, PC, write_number, write_data);
 `ifdef LOCAL
             fd = $fopen(`OUTPUT_PATH, "a");
-            $fwrite(fd, "%d@%h: $%d <= %h\n", $time, PC, write_number, write_data);
+            $fwrite(fd, "@%h: $%d <= %h\n", PC, write_number, write_data);
             $fclose(fd);
 `endif
 `endif

@@ -1,4 +1,5 @@
 `include "macros.v"
+
 module HazardControl (
     input wire [4:0] D_rs,
     input wire [4:0] D_rt,

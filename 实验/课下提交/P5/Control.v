@@ -190,7 +190,7 @@ module Control #(
                     ALUop = `ALUOP_OR;
                     CMPop = `CMPOP_IGNORE;
                     CMPSrc = `CMPSRC_IGNORE;
-                    Tuse_rs = `TUSE_IGNORE;
+                    Tuse_rs = 2'd1;
                     Tuse_rt = `TUSE_IGNORE;
                     Tnew = PIPELINE == `STAGE_DECODE ? 2'd1 : 2'd0;
                 end

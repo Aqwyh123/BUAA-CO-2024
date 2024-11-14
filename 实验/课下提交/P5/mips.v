@@ -10,8 +10,9 @@ module mips (
     wire [4:0] E_rs = E_instr[25:21], E_rt = E_instr[20:16], E_rd = E_instr[15:11];
     wire [4:0] M_rs = M_instr[25:21], M_rt = M_instr[20:16], M_rd = M_instr[15:11];
     wire [4:0] W_rs = W_instr[25:21], W_rt = W_instr[20:16], W_rd = W_instr[15:11];
-    reg [4:0] E_REG_write_number, M_REG_write_number, W_REG_write_number;
+    wire [`REGDST_SIZE - 1:0] E_RegDst, M_RegDst, W_RegDst;
     wire E_RegWrite, M_RegWrite, W_RegWrite;
+    reg [4:0] D_REG_write_number, E_REG_write_number, M_REG_write_number, W_REG_write_number;
     wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt,
                                 E_Tuse_rs, E_Tuse_rt,
                                 M_Tuse_rs, M_Tuse_rt,
@@ -194,7 +195,6 @@ module mips (
         .Tuse_rt(E_Tuse_rt),
         .Tnew(E_Tnew)
     );
-    wire [`REGDST_SIZE - 1:0] E_RegDst;
     wire [  `JUMP_SIZE - 1:0] E_Jump;
     wire [`ALUSRC_SIZE - 1:0] E_ALUSrc;
     wire [ `ALUOP_SIZE - 1:0] E_ALUop;
@@ -279,9 +279,8 @@ module mips (
         .Tuse_rt(M_Tuse_rt),
         .Tnew(M_Tnew)
     );
-    wire [  `JUMP_SIZE - 1:0] M_Jump;
-    wire [`REGDST_SIZE - 1:0] M_RegDst;
-    wire [  `DMOP_SIZE - 1:0] M_DMop;
+    wire [`JUMP_SIZE - 1:0] M_Jump;
+    wire [`DMOP_SIZE - 1:0] M_DMop;
 
     always @(*) begin
         case (M_RegDst)
@@ -338,7 +337,6 @@ module mips (
         .Tuse_rt(W_Tuse_rt),
         .Tnew(W_Tnew)
     );
-    wire [`REGDST_SIZE - 1:0] W_RegDst;
     wire [`REGSRC_SIZE - 1:0] W_RegSrc;
 
     always @(*) begin
