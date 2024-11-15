@@ -31,20 +31,20 @@ java -jar ./src/Mars_CO_v0.5.0.jar ./out/code.asm db nc ig mc CompactDataAtZero 
 cp ./out/code.txt ./build/code.txt
 
 cp ../*.v ./build/
+cp ./src/mips_TB.v ./build/
 cd ./build
 array=(`ls *.v`)
 cd ..
 for var in ${array[@]}; do
     echo "Verilog work \"$var\"" >> ./build/mips.prj
 done
-echo "verilog work \"/opt/Xilinx/14.7/ISE_DS/ISE//verilog/src/glbl.v\"" >> ./build/mips.prj
 
-echo "run 1000us;" >> ./build/mips.tcl
+echo "run 1us;" >> ./build/mips.tcl
 echo "exit" >> ./build/mips.tcl
 
 cd ./build
-$XILINX/bin/lin64/fuse -nodebug -prj mips.prj -o mips mips_TB > mips.log
-./mips -nolog -tclbatch mips.tcl > ../out/output.txt
+$XILINX/bin/lin64/fuse -nodebug -prj mips.prj -o mips.exe mips_TB > mips.log
+./mips.exe -nolog -tclbatch mips.tcl > ../out/output.txt
 cd ..
 
 diff ./out/stdout.txt ./out/output.txt > ./out/diff.txt
