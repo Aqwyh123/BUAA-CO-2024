@@ -6,21 +6,24 @@
 !*.v
 !*.asm
 
-!*.py
-!*.c
-!*.cpp
-!*.xise
-
 !*.md
 !*.png
 
+!*.py
+!*.c
+!*.cpp
+
 !*.sh
+
+!*.xise
 !*.wcfg
 
 !实验/课下提交/P3/P3_testcode.txt
 !实验/课下提交/P4/code.txt
 !实验/课下提交/P4/code_logisim.txt
 !实验/课下提交/P4/output.txt
+!实验/课下提交/P5/weak/code.txt
+!实验/课下提交/P5/weak/output.txt
 
 !*/
 
@@ -29,3 +32,5 @@
 /实验/课下提交/P3/tester_gui
 
 isim/
+out/
+build/
