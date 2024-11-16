@@ -2,6 +2,10 @@
 # Author: Toby-Shi-cloud
 # Address: https://github.com/Toby-Shi-cloud/Mars-with-BUAA-CO-extension
 
+src="../src"
+sim_time="1us"
+debug=true # 作者测试使用，不要修改为true
+
 if [ -d "./build" ]; then
     rm -r ./build
 fi
@@ -10,39 +14,54 @@ if [ -d "./out" ]; then
     rm -r ./out
 fi
 mkdir ./out
+if [ -d "./analysis/work" ]; then
+    rm -r ./analysis/work
+fi
+mkdir ./analysis/work
+if [ -d "./analysis/result" ]; then
+    rm -r ./analysis/result
+fi
+mkdir ./analysis/result
 
-read -p "选择模式(cpp/py): " mode
-if [ $mode = "cpp" ]; then
-    g++ ./src/generate.cpp -o ./build/generate
-    ./build/generate > ./out/code.asm
-elif [ $mode = "py" ]; then
-    yes "all" | python ./src/generate.py
-else
-    echo "无效模式"
-    rm -r ./build
-    rm -r ./out
-    exit 1
+cp code.asm ./out
+
+java -jar Mars_CO_v0.5.0.jar ./out/code.asm db nc mc CompactDataAtZero a dump .text HexText ./out/code.txt
+java -jar Mars_CO_v0.5.0.jar ./out/code.asm db nc ig mc CompactDataAtZero coL1 > ./out/stdout.txt
+
+cd ./analysis
+java -jar ./Hazard-Calculator.jar --hz ../out/code.txt > ../out/pipeline_cycle.txt
+cd ..
+mv ./analysis/hazard.json ./out/hazard_info.json
+
+cd ./out
+zip P5_TestCase0.zip code.txt > /dev/null
+cd ..
+mv ./out/P5_TestCase0.zip ./analysis/work
+cd ./analysis/work
+zip P5.zip P5_TestCase0.zip > /dev/null
+cd ../..
+rm ./analysis/work/P5_TestCase0.zip
+cd ./analysis
+yes "Y" | python3 ./analyzer.py > /dev/null
+cd ..
+mv ./analysis/result/*.json ./out/hazard_coverage.json
+
+cp $src/*.v ./build
+if [ $debug = true ]; then
+    rm ./build/macros.v
+    cp *.v ./build
 fi
 
-java -jar ./src/Mars_CO_v0.5.0.jar ./out/code.asm db nc mc CompactDataAtZero a dump .text HexText ./out/code.txt 
-java -jar ./src/Mars_CO_v0.5.0.jar ./out/code.asm db nc ig mc CompactDataAtZero coL1 > ./out/stdout.txt
-
-cp ../*.v ./build
-rm ./build/macros.v
-cp ./src/macros.v ./build
-cp ./src/mips_TB.v ./build
-
 mkdir ./build/sim
-cp ./out/code.txt ./build/sim/code.txt
+cp ./out/code.txt ./build/sim
 cd ./build
 vcs -full64 *.v -o sim/simv -fsdb -kdb -q
 cd sim
-./simv +vcs+finish+1us +fsdbfile+wave.fsdb -q > output_with_time.txt
-cp ./output.txt ../../out/output.txt
-cp ./output_with_time.txt ../../out/output_with_time.txt
-cp ./wave.fsdb ../../out/wave.fsdb
+./simv +vcs+finish+$sim_time +fsdbfile+wave.fsdb -q | grep @ > output_with_time.txt
+mv ./output_with_time.txt ../../out/output_with_time.txt
+mv ./wave.fsdb ../../out/wave.fsdb
 cd ../..
 
-diff ./out/stdout.txt ./out/output.txt > ./out/diff.txt
+python3 tools.py
+diff -B ./out/stdout.txt ./out/output.txt > ./out/diff.txt
 rm -r ./build
-echo "下次运行前请自行保留out文件夹"
