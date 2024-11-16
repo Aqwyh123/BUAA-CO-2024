@@ -79,8 +79,7 @@ module DM (
                     $display("%d@%h: *%h <= %h", $time, PC, {ADDR[31:2], 2'b00}, write_data_raw);
 `ifdef LOCAL
                     fd = $fopen(`OUTPUT_PATH, "a");
-                    $fwrite(fd, "%d@%h: *%h <= %h\n", $time, PC, {ADDR[31:2], 2'b00},
-                            write_data_raw);
+                    $fwrite(fd, "@%h: *%h <= %h\n", PC, {ADDR[31:2], 2'b00}, write_data_raw);
                     $fclose(fd);
 `endif
 `endif
@@ -99,8 +98,7 @@ module DM (
                              write_data_raw[7:0]);
 `ifdef LOCAL
                     fd = $fopen(`OUTPUT_PATH, "a");
-                    $fwrite(fd, "%d@%h: *%h <= %h\n", $time, PC, {ADDR[31:2], 2'b00},
-                            write_data_raw[7:0]);
+                    $fwrite(fd, "@%h: *%h <= %h\n", PC, {ADDR[31:2], 2'b00}, write_data_raw[7:0]);
                     $fclose(fd);
 `endif
 `endif
@@ -117,8 +115,7 @@ module DM (
                              write_data_raw[15:0]);
 `ifdef LOCAL
                     fd = $fopen(`OUTPUT_PATH, "a");
-                    $fwrite(fd, "%d@%h: *%h <= %h\n", $time, PC, {ADDR[31:2], 2'b00},
-                            write_data_raw[15:0]);
+                    $fwrite(fd, "@%h: *%h <= %h\n", PC, {ADDR[31:2], 2'b00}, write_data_raw[15:0]);
                     $fclose(fd);
 `endif
 `endif

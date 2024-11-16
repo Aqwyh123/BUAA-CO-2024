@@ -5,6 +5,13 @@ module mips (
     input wire reset
 );
     wire [31:0] F_PC, D_PC, E_PC8, M_PC8, W_PC8;
+`ifdef DEBUG
+`ifdef LOCAL
+    wire [31:0] E_PC = E_PC8 >= 32'h00003008 ? E_PC8 - 32'd8 : 32'h00000000;
+    wire [31:0] M_PC = M_PC8 >= 32'h00003008 ? M_PC8 - 32'd8 : 32'h00000000;
+    wire [31:0] W_PC = W_PC8 >= 32'h00003008 ? W_PC8 - 32'd8 : 32'h00000000;
+`endif
+`endif
     wire [31:0] F_instr, D_instr, E_instr, M_instr, W_instr;
     wire [4:0] D_rs = D_instr[25:21], D_rt = D_instr[20:16], D_rd = D_instr[15:11];
     wire [4:0] E_rs = E_instr[25:21], E_rt = E_instr[20:16], E_rd = E_instr[15:11];
@@ -13,18 +20,50 @@ module mips (
     wire [`REGDST_SIZE - 1:0] E_RegDst, M_RegDst, W_RegDst;
     wire E_RegWrite, M_RegWrite, W_RegWrite;
     reg [4:0] D_REG_write_number, E_REG_write_number, M_REG_write_number, W_REG_write_number;
-    wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt,
-                                E_Tuse_rs, E_Tuse_rt,
-                                M_Tuse_rs, M_Tuse_rt,
-                                W_Tuse_rs, W_Tuse_rt;
+    wire signed [`T_SIZE - 1:0] D_Tuse_rs, D_Tuse_rt, E_Tuse_rs, E_Tuse_rt,
+                                M_Tuse_rs, M_Tuse_rt, W_Tuse_rs, W_Tuse_rt;
     wire signed [`T_SIZE - 1:0] E_Tnew, M_Tnew, W_Tnew;
-`ifdef DEBUG
-`ifdef LOCAL
-    wire [31:0] E_PC = E_PC8 >= 32'h00003008 ? E_PC8 - 32'd8 : 32'h00000000;
-    wire [31:0] M_PC = M_PC8 >= 32'h00003008 ? M_PC8 - 32'd8 : 32'h00000000;
-    wire [31:0] W_PC = W_PC8 >= 32'h00003008 ? W_PC8 - 32'd8 : 32'h00000000;
-`endif
-`endif
+    wire stall;
+    wire [`FWD_FROM_SIZE - 1:0] FWD_to_D_rs, FWD_to_D_rt, FWD_to_E_rs, FWD_to_E_rt, FWD_to_M_rt;
+
+    wire [`BRANCH_SIZE - 1:0] D_Branch;
+    wire [`JUMP_SIZE - 1:0] D_Jump;
+    wire [`EXTOP_SIZE - 1:0] D_EXTop;
+    wire [`CMPOP_SIZE -1:0] D_CMPop;
+    wire D_CMPSrc;
+    wire [31:0] D_rs_data_raw, D_rt_data_raw; // 已经经过内部转发，即 W->D ALU/MEM/PC8 转发
+    wire [31:0] D_EXT_result, D_next_PC;
+    wire D_CMP_result;
+
+    wire [`JUMP_SIZE - 1:0] E_Jump;
+    wire [`ALUSRC_SIZE - 1:0] E_ALUSrc;
+    wire [`ALUOP_SIZE - 1:0] E_ALUop;
+    wire [31:0] E_rs_data_raw, E_rt_data_raw, E_EXT_result, E_ALU_result;
+
+    wire [`JUMP_SIZE - 1:0] M_Jump;
+    wire [`DMOP_SIZE - 1:0] M_DMop;
+    wire [31:0] M_rt_data_raw, M_ALU_result, M_MEM_read_data;
+
+    wire [`REGSRC_SIZE - 1:0] W_RegSrc;
+    wire [31:0] W_MEM_read_data, W_ALU_result;
+    reg [31:0] W_REG_write_data;
+
+    wire [31:0] M_FWD_data = M_Jump == `JUMP_INDEX ? M_PC8 : M_ALU_result;
+    wire [31:0] E_FWD_data = E_Jump == `JUMP_INDEX ? E_PC8 : E_EXT_result;
+    wire [31:0] W_FWD_data = W_REG_write_data;
+    wire [31:0] D_rs_data = FWD_to_D_rs == `FWD_FROM_DE ? E_FWD_data :
+                            FWD_to_D_rs == `FWD_FROM_EM ? M_FWD_data :
+                            D_rs_data_raw;
+    wire [31:0] D_rt_data = FWD_to_D_rt == `FWD_FROM_DE ? E_FWD_data :
+                            FWD_to_D_rt == `FWD_FROM_EM ? M_FWD_data :
+                            D_rt_data_raw;
+    wire [31:0] E_rs_data = FWD_to_E_rs == `FWD_FROM_EM ? M_FWD_data :
+                            FWD_to_E_rs == `FWD_FROM_MW ? W_FWD_data :
+                            E_rs_data_raw;
+    wire [31:0] E_rt_data = FWD_to_E_rt == `FWD_FROM_EM ? M_FWD_data :
+                            FWD_to_E_rt == `FWD_FROM_MW ? W_FWD_data :
+                            E_rt_data_raw;
+    wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW ? W_FWD_data : M_rt_data_raw;
 
     HazardControl hazard_control (
         .D_rs(D_rs),
@@ -59,8 +98,6 @@ module mips (
         .FWD_to_E_rt(FWD_to_E_rt),
         .FWD_to_M_rt(FWD_to_M_rt)
     );
-    wire stall;
-    wire [`FWD_FROM_SIZE - 1:0] FWD_to_D_rs, FWD_to_D_rt, FWD_to_E_rs, FWD_to_E_rt, FWD_to_M_rt;
 
     // 取指阶段 Fetch 开始
     IFU F_ifu (
@@ -98,11 +135,6 @@ module mips (
         .Tuse_rs(D_Tuse_rs),
         .Tuse_rt(D_Tuse_rt)
     );
-    wire [`BRANCH_SIZE - 1:0] D_Branch;
-    wire [`JUMP_SIZE - 1:0] D_Jump;
-    wire [`EXTOP_SIZE - 1:0] D_EXTop;
-    wire [`CMPOP_SIZE -1:0] D_CMPop;
-    wire D_CMPSrc;
 
     // 写回阶段 Writeback 继续
     GRF DW_grf (  // 同时是 D 级和 W 级的组件
@@ -119,13 +151,6 @@ module mips (
         .read_data1(D_rs_data_raw),
         .read_data2(D_rt_data_raw)
     );
-    wire [31:0] D_rs_data_raw, D_rt_data_raw; // 已经经过内部转发，即 W->D ALU/MEM/PC8 转发
-    wire [31:0] D_rs_data = FWD_to_D_rs == `FWD_FROM_DE ? E_FWD_data :
-                            FWD_to_D_rs == `FWD_FROM_EM ? M_FWD_data :
-                            D_rs_data_raw;
-    wire [31:0] D_rt_data = FWD_to_D_rt == `FWD_FROM_DE ? E_FWD_data :
-                            FWD_to_D_rt == `FWD_FROM_EM ? M_FWD_data :
-                            D_rt_data_raw;
     // 写回阶段 Writeback 结束
 
     EXT D_ext (
@@ -133,7 +158,6 @@ module mips (
         .operation(D_EXTop),
         .result(D_EXT_result)
     );
-    wire [31:0] D_EXT_result;
 
     CMP D_cmp (
         .operand1(D_rs_data),
@@ -141,7 +165,6 @@ module mips (
         .operation(D_CMPop),
         .result(D_CMP_result)
     );
-    wire D_CMP_result;
 
     NPC FD_npc (  // 同时是 F 级和 D 级的组件
         .F_PC(F_PC),
@@ -153,7 +176,6 @@ module mips (
         .CMP_result(D_CMP_result),
         .next_PC(D_next_PC)
     );
-    wire [31:0] D_next_PC;
     // 译码阶段 Decode 结束
 
     DE_REG DE_reg (  // DE 流水线寄存器
@@ -172,14 +194,6 @@ module mips (
         .E_rt_data(E_rt_data_raw),
         .E_EXT_result(E_EXT_result)
     );
-    wire [31:0] E_rs_data_raw, E_rt_data_raw, E_EXT_result;
-    wire [31:0] E_rs_data = FWD_to_E_rs == `FWD_FROM_EM ? M_FWD_data :
-                            FWD_to_E_rs == `FWD_FROM_MW ? W_FWD_data :
-                            E_rs_data_raw;
-    wire [31:0] E_rt_data = FWD_to_E_rt == `FWD_FROM_EM ? M_FWD_data :
-                            FWD_to_E_rt == `FWD_FROM_MW ? W_FWD_data :
-                            E_rt_data_raw;
-    wire [31:0] E_FWD_data = E_Jump == `JUMP_INDEX ? E_PC8 : E_EXT_result;
 
     // 执行阶段 Execute 开始
     wire [4:0] E_shamt = E_instr[10:6];
@@ -195,9 +209,6 @@ module mips (
         .Tuse_rt(E_Tuse_rt),
         .Tnew(E_Tnew)
     );
-    wire [  `JUMP_SIZE - 1:0] E_Jump;
-    wire [`ALUSRC_SIZE - 1:0] E_ALUSrc;
-    wire [ `ALUOP_SIZE - 1:0] E_ALUop;
 
     always @(*) begin
         case (E_RegDst)
@@ -214,6 +225,7 @@ module mips (
         endcase
     end
 
+    reg [31:0] E_ALUoperand1, E_ALUoperand2;
     always @(*) begin
         case (E_ALUSrc[0])
             `ALUSRC1_RS: begin
@@ -240,7 +252,6 @@ module mips (
             default E_ALUoperand2 = 32'hffffffff;
         endcase
     end
-    reg [31:0] E_ALUoperand1, E_ALUoperand2;
 
     ALU E_alu (
         .operand1(E_ALUoperand1),
@@ -248,7 +259,6 @@ module mips (
         .operation(E_ALUop),
         .result(E_ALU_result)
     );
-    wire [31:0] E_ALU_result;
     // 执行阶段 Execute 结束
 
     EM_REG EM_reg (  // EM 流水线寄存器
@@ -264,9 +274,6 @@ module mips (
         .M_rt_data(M_rt_data_raw),
         .M_ALU_result(M_ALU_result)
     );
-    wire [31:0] M_rt_data_raw, M_ALU_result;
-    wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW ? W_FWD_data : M_rt_data_raw;
-    wire [31:0] M_FWD_data = M_Jump == `JUMP_INDEX ? M_PC8 : M_ALU_result;
 
     // 访存阶段 Memory 开始
     Control #(`STAGE_MEMORY) M_control (  // M 控制器
@@ -279,8 +286,6 @@ module mips (
         .Tuse_rt(M_Tuse_rt),
         .Tnew(M_Tnew)
     );
-    wire [`JUMP_SIZE - 1:0] M_Jump;
-    wire [`DMOP_SIZE - 1:0] M_DMop;
 
     always @(*) begin
         case (M_RegDst)
@@ -308,7 +313,6 @@ module mips (
 `endif
         .read_data(M_MEM_read_data)
     );
-    wire [31:0] M_MEM_read_data;
     // 访存阶段 Memory 结束
 
     MW_REG MW_reg (  // MW 流水线寄存器
@@ -324,8 +328,6 @@ module mips (
         .W_ALU_result(W_ALU_result),
         .W_MEM_read_data(W_MEM_read_data)
     );
-    wire [31:0] W_MEM_read_data, W_ALU_result;
-    wire [31:0] W_FWD_data = W_REG_write_data;
 
     // 写回阶段 Writeback 开始
     Control #(`STAGE_WRITEBACK) W_control (  // W 控制器
@@ -337,7 +339,6 @@ module mips (
         .Tuse_rt(W_Tuse_rt),
         .Tnew(W_Tnew)
     );
-    wire [`REGSRC_SIZE - 1:0] W_RegSrc;
 
     always @(*) begin
         case (W_RegDst)
@@ -368,6 +369,5 @@ module mips (
             default W_REG_write_data = 32'hffffffff;
         endcase
     end
-    reg [31:0] W_REG_write_data;
     // 写回阶段 Writeback 继续
 endmodule

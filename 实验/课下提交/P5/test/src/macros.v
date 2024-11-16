@@ -8,7 +8,7 @@
 `ifdef DEBUG
 `define INPUT_PATH "code.txt"
 
-// `define LOCAL // 是否本地调试
+`define LOCAL // 是否本地调试
 
 `ifdef LOCAL
 `define OUTPUT_PATH "output.txt"

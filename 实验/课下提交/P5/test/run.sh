@@ -2,8 +2,6 @@
 # Author: Toby-Shi-cloud
 # Address: https://github.com/Toby-Shi-cloud/Mars-with-BUAA-CO-extension
 
-XILINX="/opt/Xilinx/14.7/ISE_DS/ISE/"
-
 if [ -d "./build" ]; then
     rm -r ./build
 fi
@@ -28,24 +26,22 @@ fi
 
 java -jar ./src/Mars_CO_v0.5.0.jar ./out/code.asm db nc mc CompactDataAtZero a dump .text HexText ./out/code.txt 
 java -jar ./src/Mars_CO_v0.5.0.jar ./out/code.asm db nc ig mc CompactDataAtZero coL1 > ./out/stdout.txt
-cp ./out/code.txt ./build/code.txt
 
-cp ../*.v ./build/
-cp ./src/mips_TB.v ./build/
+cp ../*.v ./build
+rm ./build/macros.v
+cp ./src/macros.v ./build
+cp ./src/mips_TB.v ./build
+
+mkdir ./build/sim
+cp ./out/code.txt ./build/sim/code.txt
 cd ./build
-array=(`ls *.v`)
-cd ..
-for var in ${array[@]}; do
-    echo "Verilog work \"$var\"" >> ./build/mips.prj
-done
-
-echo "run 1us;" >> ./build/mips.tcl
-echo "exit" >> ./build/mips.tcl
-
-cd ./build
-$XILINX/bin/lin64/fuse -nodebug -prj mips.prj -o mips.exe mips_TB > mips.log
-./mips.exe -nolog -tclbatch mips.tcl > ../out/output.txt
-cd ..
+vcs -full64 *.v -o sim/simv -fsdb -kdb -q
+cd sim
+./simv +vcs+finish+1us +fsdbfile+wave.fsdb -q > output_with_time.txt
+cp ./output.txt ../../out/output.txt
+cp ./output_with_time.txt ../../out/output_with_time.txt
+cp ./wave.fsdb ../../out/wave.fsdb
+cd ../..
 
 diff ./out/stdout.txt ./out/output.txt > ./out/diff.txt
 rm -r ./build
