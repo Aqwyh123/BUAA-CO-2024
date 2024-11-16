@@ -1,4 +1,4 @@
-`include "../macros.v"
+`include "../src/macros.v"
 `timescale 1ns / 1ps
 
 module mips_TB;
