@@ -1,10 +1,8 @@
-# Mars_CO_v0.5.0.jar
-# Author: Toby-Shi-cloud
-# Address: https://github.com/Toby-Shi-cloud/Mars-with-BUAA-CO-extension
+!#/bin/bash
 
-src="../src"
+src="./src"
 sim_time="1us"
-debug=true # 作者测试使用，不要修改为true
+debug=true # 作者测试使用，使用时请修改为false
 
 if [ -d "./build" ]; then
     rm -r ./build
@@ -23,7 +21,7 @@ if [ -d "./analysis/result" ]; then
 fi
 mkdir ./analysis/result
 
-cp code.asm ./out
+cp *.asm ./out/code.asm
 
 java -jar Mars_CO_v0.5.0.jar ./out/code.asm db nc mc CompactDataAtZero a dump .text HexText ./out/code.txt
 java -jar Mars_CO_v0.5.0.jar ./out/code.asm db nc ig mc CompactDataAtZero coL1 > ./out/stdout.txt
@@ -65,3 +63,4 @@ cd ../..
 python3 tools.py
 diff -B ./out/stdout.txt ./out/output.txt > ./out/diff.txt
 rm -r ./build
+rm -r ./analysis/work/*
