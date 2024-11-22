@@ -44,8 +44,9 @@ module mips (
     wire [31:0] E_rs_data_raw, E_rt_data_raw, E_EXT_result, E_ALU_result;
 
     wire [`JUMP_SIZE - 1:0] M_Jump;
-    wire [`DMOP_SIZE - 1:0] M_DMop;
-    wire [31:0] M_rt_data_raw, M_ALU_result, M_MEM_read_data;
+    wire [`MEMWRITE_SIZE - 1:0] M_MemWrite;
+    wire [`BEOP_SIZE - 1 : 0] M_BEop;
+    wire [31:0] M_rt_data_raw, M_ALU_result, M_MEM_read_data, M_BE_result;
 
     wire [`REGSRC_SIZE - 1:0] W_RegSrc;
     wire [31:0] W_MEM_read_data, W_ALU_result;
@@ -298,22 +299,55 @@ module mips (
     Control #(`STAGE_MEMORY) M_control (  // M 控制器
         .instr(M_instr),
         .Jump(M_Jump),
-        .DMop(M_DMop),
+        .MemWrite(M_MemWrite),
+        .BEop(M_BEop),
         .Tuse_rs(M_Tuse_rs),
         .Tuse_rt(M_Tuse_rt),
         .Tnew(M_Tnew)
     );
 
+    reg [3:0] M_MEM_write_enable;
+    always @(*) begin
+        case (M_MemWrite)
+            `MEMWRITE_DISABLE: M_MEM_write_enable = 4'b0000;
+            `MEMWRITE_BYTE: begin
+                case (M_ALU_result[1:0])
+                    2'b00: M_MEM_write_enable = 4'b0001;
+                    2'b01: M_MEM_write_enable = 4'b0010;
+                    2'b10: M_MEM_write_enable = 4'b0100;
+                    2'b11: M_MEM_write_enable = 4'b1000;
+                    default M_MEM_write_enable = 4'b0000;
+                endcase
+            end
+            `MEMWRITE_HALF: begin
+                case (M_ALU_result[1:0])
+                    2'b00: M_MEM_write_enable = 4'b0011;
+                    2'b10: M_MEM_write_enable = 4'b1100;
+                    default M_MEM_write_enable = 4'b0000;
+                endcase
+            end
+            `MEMWRITE_WORD: M_MEM_write_enable = 4'b1111;
+            default M_MEM_write_enable = 4'b0000;
+        endcase
+    end
+
     DM M_dm (
         .clk(clk),
         .reset(reset),
         .ADDR(M_ALU_result),
-        .write_data_raw(M_rt_data),
-        .operation(M_DMop),
+        .write_data(M_rt_data),
+        .write_enable(M_MEM_write_enable),
 `ifdef DEBUG
         .PC(M_PC8 - 32'd8),
 `endif
         .read_data(M_MEM_read_data)
+    );
+
+    BE M_be (
+        .ADDR(M_ALU_result[1:0]),
+        .data_in(M_MEM_read_data),
+        .operation(M_BEop),
+        .data_out(M_BE_result)
     );
     // 访存阶段 Memory 结束
 
@@ -324,7 +358,7 @@ module mips (
         .M_PC8(M_PC8),
         .M_instr(M_instr),
         .M_ALU_result(M_ALU_result),
-        .M_MEM_read_data(M_MEM_read_data),
+        .M_MEM_read_data(M_BE_result),
         .M_REG_write_number(M_REG_write_number),
         .M_REG_write_enable(M_REG_write_enable),
         .W_PC8(W_PC8),

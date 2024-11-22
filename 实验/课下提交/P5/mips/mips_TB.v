@@ -42,8 +42,8 @@ module mips_TB;
             "                     : %h | %h | %h | %h | %h\n",
             uut.F_instr, uut.D_instr, uut.E_instr, uut.M_instr, uut.W_instr);
             $fwrite(fd,
-            "                                | %d %d %d | %d %d %d | %d %d %d | %d %d %d\n",
-            uut.D_Tuse_rs, uut.D_Tuse_rt, uut.D_control.Tnew,
+            "                                | %d %d  %d | %d %d %d | %d %d %d | %d %d %d\n",
+            uut.D_Tuse_rs, uut.D_Tuse_rt, 3'bxxx,
             uut.E_Tuse_rs, uut.E_Tuse_rt, uut.E_Tnew,
             uut.M_Tuse_rs, uut.M_Tuse_rt, uut.M_Tnew,
             uut.W_Tuse_rs, uut.W_Tuse_rt, uut.W_Tnew);
