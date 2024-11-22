@@ -129,7 +129,7 @@
 `define REGDST_RA 2'b10
 
 `define REGWRITE_DISABLE 1'b0
-`define REGWRITE_ALLOW 1'b1
+`define REGWRITE_UNCOND 1'b1
 
 // 冒险信号定义
 `define FWD_FROM_SIZE 2

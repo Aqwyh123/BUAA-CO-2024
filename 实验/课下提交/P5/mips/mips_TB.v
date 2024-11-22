@@ -5,11 +5,6 @@ module mips_TB;
     reg clk;
     reg reset;
 
-    mips uut (
-        .clk  (clk),
-        .reset(reset)
-    );
-
 `ifdef LOCAL
     integer fd;
 `endif
@@ -31,6 +26,11 @@ module mips_TB;
     end
 
     always #5 clk = ~clk;
+
+    mips uut (
+        .clk  (clk),
+        .reset(reset)
+    );
 
 `ifdef LOCAL
     always begin

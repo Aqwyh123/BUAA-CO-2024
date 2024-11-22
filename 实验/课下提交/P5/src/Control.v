@@ -14,7 +14,7 @@ module Control #(
     output reg [`DMOP_SIZE - 1:0] DMop,
     output reg [`REGSRC_SIZE - 1:0] RegSrc,
     output reg [`REGDST_SIZE - 1:0] RegDst,
-    output reg RegWrite,
+    output reg [`REGWRITE_SIZE -1:0]RegWrite,
     output reg signed [`T_SIZE - 1:0] Tuse_rs,
     output reg signed [`T_SIZE - 1:0] Tuse_rt,
     output reg signed [`T_SIZE - 1:0] Tnew
@@ -47,7 +47,7 @@ module Control #(
                             ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
                             RegSrc = `REGSRC_ALU;
                             RegDst = `REGDST_RD;
-                            RegWrite = `REGWRITE_ALLOW;
+                            RegWrite = `REGWRITE_UNCOND;
                             DMop = `DMOP_IGNORE;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
@@ -64,7 +64,7 @@ module Control #(
                             ALUSrc = {`ALUSRC2_RT, `ALUSRC1_RS};
                             RegSrc = `REGSRC_ALU;
                             RegDst = `REGDST_RD;
-                            RegWrite = `REGWRITE_ALLOW;
+                            RegWrite = `REGWRITE_UNCOND;
                             DMop = `DMOP_IGNORE;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
@@ -115,7 +115,7 @@ module Control #(
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
                     RegSrc = `REGSRC_ALU;
                     RegDst = `REGDST_RT;
-                    RegWrite = `REGWRITE_ALLOW;
+                    RegWrite = `REGWRITE_UNCOND;
                     DMop = `DMOP_IGNORE;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
@@ -132,7 +132,7 @@ module Control #(
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
                     RegSrc = `REGSRC_MEM;
                     RegDst = `REGDST_RT;
-                    RegWrite = `REGWRITE_ALLOW;
+                    RegWrite = `REGWRITE_UNCOND;
                     DMop = {`DMOP_WORD, `MEMREAD};
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
@@ -182,7 +182,7 @@ module Control #(
                     ALUSrc = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
                     RegSrc = `REGSRC_ALU;
                     RegDst = `REGDST_RT;
-                    RegWrite = `REGWRITE_ALLOW;
+                    RegWrite = `REGWRITE_UNCOND;
                     DMop = `DMOP_IGNORE;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
@@ -198,7 +198,7 @@ module Control #(
                     ALUSrc = `ALUSRC_IGNORE;
                     RegSrc = `REGSRC_PC;
                     RegDst = `REGDST_RA;
-                    RegWrite = `REGWRITE_ALLOW;
+                    RegWrite = `REGWRITE_UNCOND;
                     DMop = `DMOP_IGNORE;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_INDEX;
