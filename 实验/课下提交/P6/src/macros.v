@@ -106,15 +106,19 @@
 `define ALUOP_LT 4'b1001
 `define ALUOP_LTU 4'b1010
 
-`define DMOP_SIZE 4
-`define DMOP_IGNORE 4'b0000
-`define DMOP_WORD 3'b000
-`define DMOP_BYTE 3'b001
-`define DMOP_HALF 3'b010
-`define DMOP_BYTEU 3'b011
-`define DMOP_HALFU 3'b100
-`define MEMREAD 1'b0
-`define MEMWRITE 1'b1
+`define MEMWRITE_SIZE 2
+`define MEMWRITE_DISABLE 2'b00
+`define MEMWRITE_WORD 2'b01
+`define MEMWRITE_HALF 2'b10
+`define MEMWRITE_BYTE 2'b11
+
+`define BEOP_SIZE 3
+`define BEOP_IGNORE 3'b000
+`define BEOP_NOOP 3'b000
+`define BEOP_BYTE_UNSIGNED 3'b001
+`define BEOP_BYTE_SIGNED 3'b010
+`define BEOP_HALF_UNSIGNED 3'b011
+`define BEOP_HALF_SIGNED 3'b100
 
 `define REGSRC_SIZE 2
 `define REGSRC_IGNORE 2'b00
@@ -128,8 +132,10 @@
 `define REGDST_RD 2'b01
 `define REGDST_RA 2'b10
 
-`define REGWRITE_DISABLE 1'b0
-`define REGWRITE_ALLOW 1'b1
+`define REGWRITE_SIZE 2
+`define REGWRITE_DISABLE 2'b00
+`define REGWRITE_UNCOND 2'b01
+`define REGWRITE_COND 2'b10
 
 // 冒险信号定义
 `define FWD_FROM_SIZE 2
