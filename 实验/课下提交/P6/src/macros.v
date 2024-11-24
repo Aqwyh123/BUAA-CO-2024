@@ -35,8 +35,8 @@
 `define RD_LSB 11
 `define SHAMT_MSB 10
 `define SHAMT_LSB 6
-`define IMM_OFF_MSB 15
-`define IMM_OFF_LSB 0
+`define IMM_MSB 15
+`define IMM_LSB 0
 `define INDEX_MSB 25
 `define INDEX_LSB 0
 
@@ -84,6 +84,8 @@
 `define CMPOP_GE 3'b101
 
 `define ALUSRC_SIZE 3
+`define ALUSRC1_SIZE 1
+`define ALUSRC2_SIZE 2
 `define ALUSRC_IGNORE 3'b000
 `define ALUSRC1_RS 1'b0
 `define ALUSRC1_RT 1'b1
@@ -106,6 +108,19 @@
 `define ALUOP_LT 4'b1001
 `define ALUOP_LTU 4'b1010
 
+`define MDUOP_SIZE 3
+`define MDUOP_NOOP 3'b000
+`define MDUOP_MULT 3'b001
+`define MDUOP_MULTU 3'b010
+`define MDUOP_DIV 3'b011
+`define MDUOP_DIVU 3'b100
+`define MDUOP_MTHI 3'b101
+`define MDUOP_MTLO 3'b110
+
+`define DELAY_SIZE 4
+`define DELAY_MUTI 4'd5
+`define DELAY_DIV 4'd10
+
 `define MEMWRITE_SIZE 2
 `define MEMWRITE_DISABLE 2'b00
 `define MEMWRITE_WORD 2'b01
@@ -120,11 +135,13 @@
 `define BEOP_HALF_UNSIGNED 3'b011
 `define BEOP_HALF_SIGNED 3'b100
 
-`define REGSRC_SIZE 2
-`define REGSRC_IGNORE 2'b00
-`define REGSRC_ALU 2'b00
-`define REGSRC_MEM 2'b01
-`define REGSRC_PC 2'b10
+`define REGSRC_SIZE 3
+`define REGSRC_IGNORE 3'b000
+`define REGSRC_ALU 3'b000
+`define REGSRC_MEM 3'b001
+`define REGSRC_PC 3'b010
+`define REGSRC_HI 3'b011
+`define REGSRC_LO 3'b100
 
 `define REGDST_SIZE 2
 `define REGDST_IGNORE 2'b00
