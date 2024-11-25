@@ -3,18 +3,9 @@
 
 `default_nettype none  // 强制使用显式端口声明
 
-`define DEBUG // 是否综合
-
-`ifdef DEBUG
-`define INPUT_PATH "code.txt"
-
-// `define LOCAL // 是否本地调试
-
+// `define LOCAL // 是否本地测试
 `ifdef LOCAL
-`define OUTPUT_PATH "output.txt"
 `timescale 1ns / 1ps
-`endif
-
 `endif
 
 // 初始化与位宽定义

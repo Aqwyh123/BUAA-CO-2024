@@ -12,7 +12,6 @@ module DE_REG (
     input wire [31:0] D_EXT_result,
     input wire [4:0] D_REG_write_number,
     input wire D_REG_write_enable,
-    output wire [31:0] E_PC,
     output wire [31:0] E_instr,
     output wire [31:0] E_PC8,
     output wire [31:0] E_rs_data,
