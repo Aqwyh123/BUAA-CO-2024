@@ -10,9 +10,6 @@
 
 // 初始化与位宽定义
 `define PC_INIT 32'h00003000
-`define IM_BEGIN 3072
-`define IM_SIZE 4096
-`define DM_SIZE 3072
 
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
@@ -41,8 +38,8 @@
 
 // 控制信号定义
 `define T_SIZE 3
-`define TUSE_IGNORE 3'd3; // 0 <= Tuse <= 3
-`define TNEW_IGNORE -3'd1; // -1 <= Tnew <= 3
+`define TUSE_IGNORE 3'd3 // 0 <= Tuse <= 3
+`define TNEW_IGNORE -3'd1 // -1 <= Tnew <= 3
 
 `define BRANCH_SIZE 2
 `define BRANCH_DISABLE 2'b00
@@ -118,13 +115,13 @@
 `define MEMWRITE_HALF 2'b10
 `define MEMWRITE_BYTE 2'b11
 
-`define BEOP_SIZE 3
-`define BEOP_IGNORE 3'b000
-`define BEOP_NOOP 3'b000
-`define BEOP_BYTE_UNSIGNED 3'b001
-`define BEOP_BYTE_SIGNED 3'b010
-`define BEOP_HALF_UNSIGNED 3'b011
-`define BEOP_HALF_SIGNED 3'b100
+`define DEOP_SIZE 3
+`define DEOP_IGNORE 3'b000
+`define DEOP_NOOP 3'b000
+`define DEOP_BYTE_UNSIGNED 3'b001
+`define DEOP_BYTE_SIGNED 3'b010
+`define DEOP_HALF_UNSIGNED 3'b011
+`define DEOP_HALF_SIGNED 3'b100
 
 `define REGSRC_SIZE 3
 `define REGSRC_IGNORE 3'b000

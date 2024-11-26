@@ -3,45 +3,73 @@
 module BE (
     input wire [1:0] ADDR,
     input wire [31:0] data_in,
-    input wire [`BEOP_SIZE - 1:0] operation,
-    output reg [31:0] data_out
+    input wire [`MEMWRITE_SIZE - 1:0] operation,
+    output reg [31:0] data_out,
+    output reg [3:0] data_enable
 );
     always @(*) begin
+        data_out = 32'h00000000;
         case (operation)
-            `BEOP_NOOP: data_out = data_in;
-            `BEOP_BYTE_UNSIGNED: begin
+            `MEMWRITE_DISABLE: begin
+                data_out = 32'h00000000;
+                data_enable = 4'b0000;
+            end
+            `MEMWRITE_BYTE: begin
                 case (ADDR)
-                    2'b00:   data_out = {24'h000000, data_in[7:0]};
-                    2'b01:   data_out = {24'h000000, data_in[15:8]};
-                    2'b10:   data_out = {24'h000000, data_in[23:16]};
-                    2'b11:   data_out = {24'h000000, data_in[31:24]};
-                    default: data_out = 32'hxxxxxxxx;
+                    2'b00: begin
+                        data_out[7:0] = data_in[7:0];
+                        data_enable   = 4'b0001;
+                    end
+                    2'b01: begin
+                        data_out[15:8] = data_in[7:0];
+                        data_enable = 4'b0010;
+                    end
+                    2'b10: begin
+                        data_out[23:16] = data_in[7:0];
+                        data_enable = 4'b0100;
+                    end
+                    2'b11: begin
+                        data_out[31:24] = data_in[7:0];
+                        data_enable = 4'b1000;
+                    end
+                    default: begin
+                        data_out = 32'hxxxxxxxx;
+                        data_enable = 4'bxxxx;
+                    end
                 endcase
             end
-            `BEOP_BYTE_SIGNED: begin
+            `MEMWRITE_HALF: begin
                 case (ADDR)
-                    2'b00:   data_out = {{24{data_in[7]}}, data_in[7:0]};
-                    2'b01:   data_out = {{24{data_in[15]}}, data_in[15:8]};
-                    2'b10:   data_out = {{24{data_in[23]}}, data_in[23:16]};
-                    2'b11:   data_out = {{24{data_in[31]}}, data_in[31:24]};
-                    default: data_out = 32'hxxxxxxxx;
+                    2'b00: begin
+                        data_out[15:0] = data_in[15:0];
+                        data_enable = 4'b0011;
+                    end
+                    2'b01: begin  // 未对齐
+                        data_out[15:0] = data_in[15:0];
+                        data_enable = 4'b0011;
+                    end
+                    2'b10: begin
+                        data_out[31:16] = data_in[15:0];
+                        data_enable = 4'b1100;
+                    end
+                    2'b11: begin  // 未对齐
+                        data_out[31:16] = data_in[15:0];
+                        data_enable = 4'b1100;
+                    end
+                    default: begin
+                        data_out = 32'hxxxxxxxx;
+                        data_enable = 4'bxxxx;
+                    end
                 endcase
             end
-            `BEOP_HALF_UNSIGNED: begin
-                case (ADDR)
-                    2'b00:   data_out = {16'h0000, data_in[15:0]};
-                    2'b10:   data_out = {16'h0000, data_in[23:8]};
-                    default: data_out = 32'hxxxxxxxx;
-                endcase
+            `MEMWRITE_WORD: begin
+                data_out = data_in;
+                data_enable = 4'b1111;
             end
-            `BEOP_HALF_SIGNED: begin
-                case (ADDR)
-                    2'b00:   data_out = {{16{data_in[15]}}, data_in[15:0]};
-                    2'b10:   data_out = {{16{data_in[23]}}, data_in[23:8]};
-                    default: data_out = 32'hxxxxxxxx;
-                endcase
+            default: begin
+                data_out = 32'hxxxxxxxx;
+                data_enable = 4'bxxxx;
             end
-            default: data_out = 32'hxxxxxxxx;
         endcase
     end
 endmodule

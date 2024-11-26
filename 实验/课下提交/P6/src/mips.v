@@ -32,8 +32,7 @@ module mips (
 
     wire [`REGSRC_SIZE - 1:0] D_RegSrc, E_RegSrc, M_RegSrc, W_RegSrc;
     wire [`MDUOP_SIZE - 1:0] D_MDUop, E_MDUop;
-    wire D_require = D_RegSrc == `REGSRC_HI || D_RegSrc == `REGSRC_LO ||
-                     D_MDUop == `MDUOP_MTHI || D_MDUop == `MDUOP_MTLO;
+    wire D_require = D_RegSrc == `REGSRC_HI || D_RegSrc == `REGSRC_LO || D_MDUop != `MDUOP_NOOP;
     wire E_MDU_start, E_MDU_busy;
     wire E_busy = E_MDU_start || E_MDU_busy;
 
@@ -56,9 +55,10 @@ module mips (
     reg [31:0] E_ALUoperand1, E_ALUoperand2;
 
     wire [`MEMWRITE_SIZE - 1:0] M_MemWrite;
-    wire [`BEOP_SIZE - 1:0] M_BEop;
-    wire [31:0] M_ALU_result, M_MEM_read_data, M_BE_result, M_HI_LO;
-    reg [3:0] M_MEM_write_enable;
+    wire [`DEOP_SIZE - 1:0] M_DEop;
+    wire [31:0] M_ALU_result, M_MEM_read_data_raw, M_MEM_read_data, M_HI_LO;
+    wire [31:0] M_MEM_write_data;
+    wire [ 3:0] M_MEM_write_enable;
 
     wire [31:0] W_MEM_read_data, W_ALU_result, W_HI_LO;
     reg [31:0] W_REG_write_data;
@@ -84,7 +84,7 @@ module mips (
                             E_rt_data_raw;
     wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW ? W_FWD_data : M_rt_data_raw;
 
-    assign m_inst_addr = M_PC8 - 32'd8; // 调试信息
+    assign m_inst_addr = M_PC8 - 32'd8;  // 调试信息
     assign w_grf_addr = W_REG_write_number;
     assign w_grf_wdata = W_REG_write_data;
     assign w_grf_we = W_REG_write_enable;
@@ -169,8 +169,8 @@ module mips (
     GRF DW_grf (  // 同时是 D 级和 W 级的组件
         .clk(clk),
         .reset(reset),
-        .read_number1(D_rs),
-        .read_number2(D_rt),
+        .read_number1(D_instr[`RS_MSB:`RS_LSB]),
+        .read_number2(D_instr[`RT_MSB:`RT_LSB]),
         .write_number(W_REG_write_number),
         .write_enable(W_REG_write_enable),
         .write_data(W_REG_write_data),
@@ -205,32 +205,18 @@ module mips (
 
     always @(*) begin
         case (D_RegDst)
-            `REGDST_RT: begin
-                D_REG_write_number = D_instr[`RT_MSB:`RT_LSB];
-            end
-            `REGDST_RD: begin
-                D_REG_write_number = D_instr[`RD_MSB:`RD_LSB];
-            end
-            `REGDST_RA: begin
-                D_REG_write_number = 5'd31;
-            end
-            default: D_REG_write_number = 5'd0;
+            `REGDST_RT: D_REG_write_number = D_instr[`RT_MSB:`RT_LSB];
+            `REGDST_RD: D_REG_write_number = D_instr[`RD_MSB:`RD_LSB];
+            `REGDST_RA: D_REG_write_number = 5'd31;
+            default: D_REG_write_number = 5'bxxxxx;
         endcase
     end
     always @(*) begin
         case (D_RegWrite)
-            `REGWRITE_DISABLE: begin
-                D_REG_write_enable = 1'b0;
-            end
-            `REGWRITE_UNCOND: begin
-                D_REG_write_enable = 1'b1;
-            end
-            `REGWRITE_COND: begin
-                D_REG_write_enable = D_CMP_result;
-            end
-            default: begin
-                D_REG_write_enable = 1'b0;
-            end
+            `REGWRITE_DISABLE: D_REG_write_enable = 1'b0;
+            `REGWRITE_UNCOND: D_REG_write_enable = 1'b1;
+            `REGWRITE_COND: D_REG_write_enable = D_CMP_result;
+            default: D_REG_write_enable = 1'bx;
         endcase
     end
     // 译码阶段 Decode 结束
@@ -271,28 +257,16 @@ module mips (
 
     always @(*) begin
         case (E_ALUSrc[0])
-            `ALUSRC1_RS: begin
-                E_ALUoperand1 = E_rs_data;
-            end
-            `ALUSRC1_RT: begin
-                E_ALUoperand1 = E_rt_data;
-            end
-            default: E_ALUoperand1 = 32'hffffffff;
+            `ALUSRC1_RS: E_ALUoperand1 = E_rs_data;
+            `ALUSRC1_RT: E_ALUoperand1 = E_rt_data;
+            default: E_ALUoperand1 = 32'hxxxxxxxx;
         endcase
         case (E_ALUSrc[`ALUSRC2_SIZE+`ALUSRC1_SIZE-1:`ALUSRC1_SIZE])
-            `ALUSRC2_RT: begin
-                E_ALUoperand2 = E_rt_data;
-            end
-            `ALUSRC2_IMM_SHAMT: begin
-                E_ALUoperand2 = E_EXT_result;
-            end
-            `ALUSRC2_S: begin
-                E_ALUoperand2 = {27'd0, E_instr[`SHAMT_MSB:`SHAMT_LSB]};
-            end
-            `ALUSRC2_RS: begin
-                E_ALUoperand2 = E_rs_data;
-            end
-            default: E_ALUoperand2 = 32'hffffffff;
+            `ALUSRC2_RT: E_ALUoperand2 = E_rt_data;
+            `ALUSRC2_IMM_SHAMT: E_ALUoperand2 = E_EXT_result;
+            `ALUSRC2_S: E_ALUoperand2 = {27'd0, E_instr[`SHAMT_MSB:`SHAMT_LSB]};
+            `ALUSRC2_RS: E_ALUoperand2 = E_rs_data;
+            default: E_ALUoperand2 = 32'hxxxxxxxx;
         endcase
     end
     ALU E_alu (
@@ -340,47 +314,31 @@ module mips (
         .instr(M_instr),
         .Jump(M_Jump),
         .MemWrite(M_MemWrite),
-        .BEop(M_BEop),
+        .DEop(M_DEop),
         .RegSrc(M_RegSrc),
         .Tuse_rs(M_Tuse_rs),
         .Tuse_rt(M_Tuse_rt),
         .Tnew(M_Tnew)
     );
 
-    always @(*) begin
-        case (M_MemWrite)
-            `MEMWRITE_DISABLE: M_MEM_write_enable = 4'b0000;
-            `MEMWRITE_BYTE: begin
-                case (M_ALU_result[1:0])
-                    2'b00:   M_MEM_write_enable = 4'b0001;
-                    2'b01:   M_MEM_write_enable = 4'b0010;
-                    2'b10:   M_MEM_write_enable = 4'b0100;
-                    2'b11:   M_MEM_write_enable = 4'b1000;
-                    default: M_MEM_write_enable = 4'b0000;
-                endcase
-            end
-            `MEMWRITE_HALF: begin
-                case (M_ALU_result[1:0])
-                    2'b00:   M_MEM_write_enable = 4'b0011;
-                    2'b10:   M_MEM_write_enable = 4'b1100;
-                    default: M_MEM_write_enable = 4'b0000;
-                endcase
-            end
-            `MEMWRITE_WORD: M_MEM_write_enable = 4'b1111;
-            default: M_MEM_write_enable = 4'b0000;
-        endcase
-    end
-
-    assign m_data_addr = M_ALU_result;  // DM 输入地址
-    assign m_data_wdata = M_rt_data;  // DM 写数据
-    assign m_data_byteen = M_MEM_write_enable;  // DM 写字节使能
-    assign M_MEM_read_data = m_data_rdata;  // DM 读数据
-
     BE M_be (
         .ADDR(M_ALU_result[1:0]),
-        .data_in(M_MEM_read_data),
-        .operation(M_BEop),
-        .data_out(M_BE_result)
+        .data_in(M_rt_data),
+        .operation(M_MemWrite),
+        .data_out(M_MEM_write_data),
+        .data_enable(M_MEM_write_enable)
+    );
+
+    assign m_data_addr = M_ALU_result;  // DM 输入地址
+    assign m_data_wdata = M_MEM_write_data;  // DM 写数据
+    assign m_data_byteen = M_MEM_write_enable;  // DM 写字节使能
+    assign M_MEM_read_data_raw = m_data_rdata;  // DM 读数据
+
+    DE M_de (
+        .ADDR(M_ALU_result[1:0]),
+        .data_in(M_MEM_read_data_raw),
+        .operation(M_DEop),
+        .data_out(M_MEM_read_data)
     );
     // 访存阶段 Memory 结束
 
@@ -392,7 +350,7 @@ module mips (
         .M_instr(M_instr),
         .M_ALU_result(M_ALU_result),
         .M_HI_LO(M_HI_LO),
-        .M_MEM_read_data(M_BE_result),
+        .M_MEM_read_data(M_MEM_read_data),
         .M_REG_write_number(M_REG_write_number),
         .M_REG_write_enable(M_REG_write_enable),
         .W_PC8(W_PC8),

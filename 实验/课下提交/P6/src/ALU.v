@@ -19,7 +19,7 @@ module ALU (
             `ALUOP_SRA: result = $signed(operand1) >>> operand2[4:0];  // sra
             `ALUOP_LT: result = $signed(operand1) < $signed(operand2);  // slt
             `ALUOP_LTU: result = operand1 < operand2;  // sltu
-            default: result = 32'hffffffff;
+            default: result = 32'hxxxxxxxx;
         endcase
     end
 endmodule

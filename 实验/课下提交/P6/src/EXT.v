@@ -10,7 +10,7 @@ module EXT (
             `EXTOP_ZERO: result = {16'd0, operand};
             `EXTOP_SIGN: result = {{16{operand[15]}}, operand};
             `EXTOP_UPPER: result = {operand, 16'd0};
-            default: result = 32'hffffffff;
+            default: result = 32'hxxxxxxxx;
         endcase
     end
 endmodule

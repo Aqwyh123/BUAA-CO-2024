@@ -35,8 +35,8 @@ module MDU (
                 default: delay <= 4'd0;
             endcase
             operation_now <= operation;
-            operand1_reg <= operand1;
-            operand2_reg <= operand2;
+            operand1_reg  <= operand1;
+            operand2_reg  <= operand2;
         end else begin
             delay <= delay == 4'd0 ? 4'd0 : delay - 4'd1;
             operation_now <= delay == 4'd1 ? `MDUOP_NOOP : operation_now;

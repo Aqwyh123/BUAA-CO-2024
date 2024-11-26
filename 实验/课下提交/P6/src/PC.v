@@ -8,6 +8,7 @@ module PC (
     output wire [31:0] PC
 );
     reg [31:0] PC_reg;
+    assign PC = PC_reg;
     always @(posedge clk) begin
         if (reset) begin
             PC_reg <= `PC_INIT;
@@ -15,5 +16,4 @@ module PC (
             PC_reg <= next_PC;
         end
     end
-    assign PC = PC_reg;
 endmodule

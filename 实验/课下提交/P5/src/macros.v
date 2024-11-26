@@ -50,8 +50,8 @@
 
 // 控制信号定义
 `define T_SIZE 3
-`define TUSE_IGNORE 3'd3; // 0 <= Tuse <= 3
-`define TNEW_IGNORE -3'd1; // -1 <= Tnew <= 3
+`define TUSE_IGNORE 3'd3 // 0 <= Tuse <= 3
+`define TNEW_IGNORE -3'd1 // -1 <= Tnew <= 3
 
 `define BRANCH_SIZE 2
 `define BRANCH_DISABLE 2'b00

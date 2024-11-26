@@ -1,3 +1,4 @@
+`include "../src/macros.v"
 `timescale 1ns / 1ps
 
 module mips_txt;
@@ -83,8 +84,8 @@ module mips_txt;
             "                     : %h | %h | %h | %h | %h\n",
             uut.F_instr, uut.D_instr, uut.E_instr, uut.M_instr, uut.W_instr);
             $fwrite(fd,
-            "                                | %d %d %d | %d %d %d | %d %d %d | %d %d %d\n",
-            uut.D_Tuse_rs, uut.D_Tuse_rt, uut.D_control.Tnew,
+            "                                | %d %d  %d | %d %d %d | %d %d %d | %d %d %d\n",
+            uut.D_Tuse_rs, uut.D_Tuse_rt, 3'bxxx,
             uut.E_Tuse_rs, uut.E_Tuse_rt, uut.E_Tnew,
             uut.M_Tuse_rs, uut.M_Tuse_rt, uut.M_Tnew,
             uut.W_Tuse_rs, uut.W_Tuse_rt, uut.W_Tnew);
@@ -108,18 +109,7 @@ module mips_txt;
         if (m_data_byteen[0]) fixed_wdata[7 : 0] = m_data_wdata[7 : 0];
     end
 
-    always @(posedge clk) begin
-        if (reset) for (i = 0; i < 4096; i = i + 1) data[i] <= 0;
-        else if (|m_data_byteen) begin
-            data[fixed_addr>>2] <= fixed_wdata;
-            $display("%d@%h: *%h <= %h", $time, m_inst_addr, fixed_addr, fixed_wdata);
-`ifdef LOCAL
-            df = $fopen("output.txt", "a");
-            $fwrite(df, "@%h: *%h <= %h\n", m_inst_addr, fixed_addr, fixed_wdata);
-            $fclose(df);
-`endif
-        end
-    end
+
 
     always @(posedge clk) begin
         if (~reset) begin
@@ -131,6 +121,19 @@ module mips_txt;
                 $fclose(df);
 `endif
             end
+        end
+    end
+
+always @(posedge clk) begin
+        if (reset) for (i = 0; i < 4096; i = i + 1) data[i] <= 0;
+        else if (|m_data_byteen) begin
+            data[fixed_addr>>2] <= fixed_wdata;
+            $display("%d@%h: *%h <= %h", $time, m_inst_addr, fixed_addr, fixed_wdata);
+`ifdef LOCAL
+            df = $fopen("output.txt", "a");
+            $fwrite(df, "@%h: *%h <= %h\n", m_inst_addr, fixed_addr, fixed_wdata);
+            $fclose(df);
+`endif
         end
     end
 
