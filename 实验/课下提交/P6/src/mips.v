@@ -32,7 +32,7 @@ module mips (
 
     wire [`REGSRC_SIZE - 1:0] D_RegSrc, E_RegSrc, M_RegSrc, W_RegSrc;
     wire [`MDUOP_SIZE - 1:0] D_MDUop, E_MDUop;
-    wire D_require = D_RegSrc == `REGSRC_HI || D_RegSrc == `REGSRC_LO || D_MDUop != `MDUOP_NOOP;
+    wire D_request = D_RegSrc == `REGSRC_HI || D_RegSrc == `REGSRC_LO || D_MDUop != `MDUOP_NOOP;
     wire E_MDU_start, E_MDU_busy;
     wire E_busy = E_MDU_start || E_MDU_busy;
 
@@ -63,13 +63,13 @@ module mips (
     wire [31:0] W_MEM_read_data, W_ALU_result, W_HI_LO;
     reg [31:0] W_REG_write_data;
 
-    wire [`JUMP_SIZE - 1:0] E_Jump, M_Jump; // D_data 已经经过内部转发，即 W->D ALU/MEM/PC8/HL 转发
     wire [31:0] D_rs_data_raw, D_rt_data_raw, E_rs_data_raw, E_rt_data_raw, M_rt_data_raw;
-    wire [31:0] E_FWD_data = E_Jump == `JUMP_INDEX ? E_PC8 : E_EXT_result;
-    wire [31:0] M_FWD_data = M_Jump == `JUMP_INDEX ? M_PC8 :
+    wire [31:0] E_FWD_data = E_RegSrc == `REGSRC_PC8 ? E_PC8 : E_EXT_result;
+    wire [31:0] M_FWD_data = M_RegSrc == `REGSRC_PC8 ? M_PC8 :
                              M_RegSrc == `REGSRC_HI || M_RegSrc == `REGSRC_LO ? M_HI_LO :
                              M_ALU_result;
     wire [31:0] W_FWD_data = W_REG_write_data;
+    // D_data 已经经过内部转发，即 W->D ALU/MEM/PC8/HL 转发
     wire [31:0] D_rs_data = FWD_to_D_rs == `FWD_FROM_DE ? E_FWD_data :
                             FWD_to_D_rs == `FWD_FROM_EM ? M_FWD_data :
                             D_rs_data_raw;
@@ -95,7 +95,7 @@ module mips (
         .D_rt(D_instr[`RT_MSB:`RT_LSB]),
         .D_Tuse_rs(D_Tuse_rs),
         .D_Tuse_rt(D_Tuse_rt),
-        .D_require(D_require),
+        .D_request(D_request),
         .E_rs(E_instr[`RS_MSB:`RS_LSB]),
         .E_rt(E_instr[`RT_MSB:`RT_LSB]),
         .E_REG_write_number(E_REG_write_number),
@@ -199,7 +199,7 @@ module mips (
         .regester(D_rs_data),
         .branch(D_Branch),
         .jump(D_Jump),
-        .CMP_result(D_CMP_result),
+        .condition(D_CMP_result),
         .next_PC(FD_next_PC)
     );
 
@@ -245,7 +245,6 @@ module mips (
     // 执行阶段 Execute 开始
     Control #(`STAGE_EXECUTE) E_control (  // E 控制器
         .instr(E_instr),
-        .Jump(E_Jump),
         .ALUSrc(E_ALUSrc),
         .ALUop(E_ALUop),
         .MDUop(E_MDUop),
@@ -312,7 +311,6 @@ module mips (
     // 访存阶段 Memory 开始
     Control #(`STAGE_MEMORY) M_control (  // M 控制器
         .instr(M_instr),
-        .Jump(M_Jump),
         .MemWrite(M_MemWrite),
         .DEop(M_DEop),
         .RegSrc(M_RegSrc),
@@ -379,7 +377,7 @@ module mips (
             `REGSRC_MEM: begin
                 W_REG_write_data = W_MEM_read_data;
             end
-            `REGSRC_PC: begin
+            `REGSRC_PC8: begin
                 W_REG_write_data = W_PC8;
             end
             `REGSRC_HI: begin

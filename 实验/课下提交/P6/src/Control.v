@@ -558,7 +558,7 @@ module Control #(
                 end
                 6'b000011: begin  // jal
                     ALUSrc = `ALUSRC_IGNORE;
-                    RegSrc = `REGSRC_PC;
+                    RegSrc = `REGSRC_PC8;
                     RegDst = `REGDST_RA;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;

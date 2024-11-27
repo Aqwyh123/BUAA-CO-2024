@@ -127,7 +127,7 @@
 `define REGSRC_IGNORE 3'b000
 `define REGSRC_ALU 3'b000
 `define REGSRC_MEM 3'b001
-`define REGSRC_PC 3'b010
+`define REGSRC_PC8 3'b010
 `define REGSRC_HI 3'b011
 `define REGSRC_LO 3'b100
 

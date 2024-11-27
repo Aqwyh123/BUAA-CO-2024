@@ -5,7 +5,7 @@ module HazardControl (
     input wire [4:0] D_rt,
     input wire signed [`T_SIZE - 1:0] D_Tuse_rs,
     input wire signed [`T_SIZE - 1:0] D_Tuse_rt,
-    input wire D_require,
+    input wire D_request,
     input wire [4:0] E_rs,
     input wire [4:0] E_rt,
     input wire [4:0] E_REG_write_number,
@@ -56,7 +56,7 @@ module HazardControl (
 
     wire E_stall_rs = E_to_D_A_rs && E_Tnew > D_Tuse_rs;
     wire E_stall_rt = E_to_D_A_rt && E_Tnew > D_Tuse_rt;
-    wire E_stall_hl = D_require && E_busy;
+    wire E_stall_hl = D_request && E_busy;
     wire M_stall_rs = M_to_D_A_rs && M_Tnew > D_Tuse_rs;
     wire M_stall_rt = M_to_D_A_rt && M_Tnew > D_Tuse_rt;
 
