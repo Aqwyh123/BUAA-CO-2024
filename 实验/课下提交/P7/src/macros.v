@@ -8,8 +8,17 @@
 `timescale 1ns / 1ps
 `endif
 
-// 初始化与位宽定义
+// 初始化值、地址空间和位宽定义
 `define PC_INIT 32'h00003000
+
+`define MEM_LSA 32'h00000000
+`define MEM_MSA 32'h00002fff
+`define TIMER0_LSA 32'h00007f00
+`define TIMER0_MSA 32'h00007f0b
+`define TIMER1_LSA 32'h00007f10
+`define TIMEE1_MSA 32'h00007f1b
+`define INT_LSA 32'h00007f20
+`define INT_MSA 32'h00007f23
 
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
