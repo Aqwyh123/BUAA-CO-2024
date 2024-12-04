@@ -41,7 +41,7 @@ module mips (
     CPU cpu (  // CPU
         .clk(clk),
         .reset(reset),
-        .interrupt(interrupt),
+        .HWInt(IRQ),
         .PC(macroscopic_pc),
         .IM_ADDR(i_inst_addr),
         .IM_read_data(i_inst_rdata),

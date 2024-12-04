@@ -3,7 +3,7 @@
 module CPU (
     input  wire        clk,               // 时钟信号
     input  wire        reset,             // 同步复位信号
-    input  wire        interrupt,         // 外部中断信号
+    input  wire [ 5:0] HWInt,             // 外部中断信号
     output wire [31:0] PC,                // 宏观 PC
     // IM 外设接口
     output wire [31:0] IM_ADDR,           // IM 读取地址（取指 PC）

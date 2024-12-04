@@ -8,18 +8,10 @@
 `timescale 1ns / 1ps
 `endif
 
-// 初始化值、地址空间和位宽定义
+// 初始化值定义
 `define PC_INIT 32'h00003000
 
-`define MEM_LSA 32'h00000000
-`define MEM_MSA 32'h00002fff
-`define TIMER0_LSA 32'h00007f00
-`define TIMER0_MSA 32'h00007f0b
-`define TIMER1_LSA 32'h00007f10
-`define TIMEE1_MSA 32'h00007f1b
-`define INT_LSA 32'h00007f20
-`define INT_MSA 32'h00007f23
-
+ // 指令格式定义
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
 `define FUNCT_MSB 5
@@ -36,6 +28,42 @@
 `define IMM_LSB 0
 `define INDEX_MSB 25
 `define INDEX_LSB 0
+
+ // 内存地址空间定义
+`define MEM_LSA 32'h00000000
+`define MEM_MSA 32'h00002fff
+`define TIMER0_LSA 32'h00007f00
+`define TIMER0_MSA 32'h00007f0b
+`define TIMER1_LSA 32'h00007f10
+`define TIMEE1_MSA 32'h00007f1b
+`define INT_LSA 32'h00007f20
+`define INT_MSA 32'h00007f23
+
+// CP0 寄存器定义
+`define SR_NUMBER 12
+`define CAUSE_NUMBER 13
+`define EPC_NUMBER 14
+
+`define IM_SIZE 6
+`define IM_MSB 15
+`define IM_LSB 10
+
+`define EXL_SIZE 1
+`define EXL_POS 1
+
+`define IE_SIZE 1
+`define IE_POS 0
+
+`define BD_SIZE 1
+`define BD_POS 31
+
+`define IP_SIZE 6
+`define IP_MSB 15
+`define IP_LSB 10
+
+`define EXCCODE_SIZE 5
+`define EXCCODE_MSB 6
+`define EXCCODE_LSB 2
 
 // 控制器流水级定义
 `define STAGE_DEFAULT 0
@@ -157,5 +185,13 @@
 `define FWD_FROM_DE 2'b01
 `define FWD_FROM_EM 2'b10
 `define FWD_FROM_MW 2'b11
+
+// 异常码定义
+`define INT 5'd0
+`define ADEL 5'd4
+`define ADES 5'd5
+`define SYSCALL 5'd8
+`define RI 5'd10
+`define OV 5'd12
 
 `endif
