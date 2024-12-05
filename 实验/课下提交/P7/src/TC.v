@@ -1,10 +1,5 @@
 `include "macros.v"
 
-`define IDLE 2'b00
-`define LOAD 2'b01
-`define CNT 2'b10
-`define INT 2'b11
-
 `define CTRL mem[0]
 `define PRESET mem[1]
 `define COUNT mem[2]
@@ -18,6 +13,7 @@ module TC (
     output wire [31:0] Dout,
     output wire IRQ
 );
+    localparam [1:0] IDLE = 2'b00, LOAD = 2'b01, CNT = 2'b10, INT = 2'b11;
     reg [1:0] state;
     reg [31:0] mem[2:0];
 
@@ -39,28 +35,28 @@ module TC (
             mem[Addr[3:2]] <= load;
         end else begin
             case (state)
-                `IDLE:
+                IDLE:
                 if (`CTRL[0]) begin
-                    state <= `LOAD;
+                    state <= LOAD;
                     _IRQ  <= 1'b0;
                 end
-                `LOAD: begin
+                LOAD: begin
                     `COUNT <= `PRESET;
-                    state  <= `CNT;
+                    state  <= CNT;
                 end
-                `CNT:
+                CNT:
                 if (`CTRL[0]) begin
                     if (`COUNT > 1) `COUNT <= `COUNT - 1;
                     else begin
                         `COUNT <= 0;
-                        state  <= `INT;
+                        state  <= INT;
                         _IRQ   <= 1'b1;
                     end
-                end else state <= `IDLE;
+                end else state <= IDLE;
                 default: begin
                     if (`CTRL[2:1] == 2'b00) `CTRL[0] <= 1'b0;
                     else _IRQ <= 1'b0;
-                    state <= `IDLE;
+                    state <= IDLE;
                 end
             endcase
         end

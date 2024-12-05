@@ -24,7 +24,7 @@ module CP0 (
     input wire [5:0] HWInt,
     input wire EXLClr,
     output wire [31:0] EPCOut,
-    output wire IRQ
+    output wire Req
 );
     reg [31:0] regfile[0:31];
     assign read_data = regfile[number];
@@ -32,7 +32,7 @@ module CP0 (
 
     wire interupt = `IE & ~`EXL & |(`IM & HWInt); // 全局中断使能且不在异常处理状态且相应中断使能且相应中断请求
     wire exception = ~`EXL & |ExcCodeIn;  // 不在异常处理状态且有异常请求
-    assign IRQ = interupt | exception;
+    assign Req = interupt | exception;
 
 `ifdef LOCAL
     wire SR = `SR;
@@ -55,11 +55,11 @@ module CP0 (
                 regfile[number] <= write_data;  // 规定不会写入CAUSE
             end else begin
                 `IP <= HWInt;
-                if (EXLClr) begin  // 响应中断优先
+                if (EXLClr) begin  // 响应优先
                     `EXL <= 1'b0;
                 end else if (interupt) begin  // 中断次之
                     `EXL <= 1'b1;
-                    `EXCCODE <= `INT;
+                    `EXCCODE <= `EXCCODE_INT;
                     `BD <= BDIn;
                     `EPC <= BDIn ? VPC : VPC - 32'd4;
                 end else if (exception) begin  // 异常最次

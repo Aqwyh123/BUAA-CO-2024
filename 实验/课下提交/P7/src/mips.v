@@ -25,15 +25,15 @@ module mips (
 
     output wire [31:0] w_inst_addr  // W 级 PC
 );
-    wire [31:0] M_ADDR, M_WD;  // 内存逻辑地址，内存待写入数据
+    wire [31:0] MEM_ADDR, MEM_WD;  // 内存逻辑地址，内存待写入数据
     wire [31:0] DEV_ADDR, DEV_WD;  // 外设物理地址，外设待写入数据
 
-    wire [31:0] M_RD;  // 内存读取数据
-    wire [31:0] MEM_RD, timer0_RD, timer1_RD, INT_RD;  // 外设读取数据
+    wire [31:0] MEM_RD;  // 内存读取数据
+    wire [31:0] DM_RD, timer0_RD, timer1_RD, INT_RD;  // 外设读取数据
 
-    wire [3:0] M_WE;  // 内存字节使能信号
+    wire [3:0] MEM_WE;  // 内存字节使能信号
     wire timer0_WE, timer1_WE;  // 定时器写使能信号
-    wire [3:0] MEM_WE, INT_WE;  // 外设字节使能信号
+    wire [3:0] DM_WE, INT_WE;  // 外设字节使能信号
 
     wire timer0_IRQ, timer1_IRQ;  // 定时器中断信号
     wire [5:0] IRQ = {3'b000, interrupt, timer1_IRQ, timer0_IRQ};  // 中断信号
@@ -45,10 +45,10 @@ module mips (
         .PC(macroscopic_pc),
         .IM_ADDR(i_inst_addr),
         .IM_read_data(i_inst_rdata),
-        .MEM_ADDR(M_ADDR),
-        .MEM_read_data(M_RD),
-        .MEM_write_data(M_WD),
-        .MEM_write_enable(M_WE),
+        .MEM_ADDR(MEM_ADDR),
+        .MEM_read_data(MEM_RD),
+        .MEM_write_data(MEM_WD),
+        .MEM_write_enable(MEM_WE),
         .MEM_PC(m_inst_addr),
         .GRF_write_enable(w_grf_we),
         .GRF_write_number(w_grf_addr),
@@ -57,17 +57,17 @@ module mips (
     );
 
     Bridge bridge (
-        .PrAddr(M_ADDR),
-        .PrRD(M_RD),
-        .PrWD(M_WD),
-        .PrWE(M_WE),
-        .MEM_RD(MEM_RD),
+        .PrAddr(MEM_ADDR),
+        .PrRD(MEM_RD),
+        .PrWD(MEM_WD),
+        .PrWE(MEM_WE),
+        .DM_RD(DM_RD),
         .timer0_RD(timer0_RD),
         .timer1_RD(timer1_RD),
         .INT_RD(INT_RD),
         .DEV_Addr(DEV_ADDR),
         .DEV_WD(DEV_WD),
-        .MEM_WE(MEM_WE),
+        .DM_WE(DM_WE),
         .timer0_WE(timer0_WE),
         .timer1_WE(timer1_WE),
         .INT_WE(INT_WE)
@@ -75,8 +75,8 @@ module mips (
 
     assign m_data_addr = DEV_ADDR;  // DM 读写地址
     assign m_data_wdata = DEV_WD;  // DM 待写入数据
-    assign m_data_byteen = MEM_WE;  // DM 字节使能信号
-    assign MEM_RD = m_data_rdata;  // DM 读取数据
+    assign m_data_byteen = DM_WE;  // DM 字节使能信号
+    assign DM_RD = m_data_rdata;  // DM 读取数据
 
     TC timer0 (  // 定时器 0
         .clk(clk),

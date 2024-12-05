@@ -14,29 +14,34 @@ module Control #(
     output reg [`MDUOP_SIZE - 1:0] MDUop,
     output reg [`MEMWRITE_SIZE - 1:0] MemWrite,
     output reg [`DEOP_SIZE - 1:0] DEop,
+    output reg CP0Write,
     output reg [`REGSRC_SIZE - 1:0] RegSrc,
     output reg [`REGDST_SIZE - 1:0] RegDst,
     output reg [`REGWRITE_SIZE -1:0] RegWrite,
     output reg signed [`T_SIZE - 1:0] Tuse_rs,
     output reg signed [`T_SIZE - 1:0] Tuse_rt,
-    output reg signed [`T_SIZE - 1:0] Tnew
+    output reg signed [`T_SIZE - 1:0] Tnew,
+    output reg [`EXCEPTION_SIZE - 1:0 ] exception
 );
     wire [5:0] opcode = instr[`OPCODE_MSB:`OPCODE_LSB];
     wire [5:0] funct = instr[`FUNCT_MSB:`FUNCT_LSB];
+    wire [4:0] rs = instr[`RS_MSB:`RS_LSB];
     wire [4:0] rt = instr[`RT_MSB:`RT_LSB];
 
     always @(*) begin
+        exception = `EXCEPTION_NONE;
+        CP0Write  = 1'b0;
         if (opcode == 6'b000000 && funct == 6'b000000 && rt == 5'b00000) begin  // nop
             ALUSrc = `ALUSRC_IGNORE;
             RegSrc = `REGSRC_IGNORE;
             RegDst = `REGDST_IGNORE;
             RegWrite = `REGWRITE_DISABLE;
             MemWrite = `MEMWRITE_DISABLE;
-            DEop = `DEOP_IGNORE;
+            DEop = `DEOP_NOOP;
             Branch = `BRANCH_DISABLE;
             Jump = `JUMP_DISABLE;
             EXTop = `EXTOP_IGNORE;
-            ALUop = `ALUOP_IGNORE;
+            ALUop = `ALUOP_NOOP;
             MDUop = `MDUOP_NOOP;
             CMPop = `CMPOP_IGNORE;
             CMPSrc = `CMPSRC_IGNORE;
@@ -53,7 +58,7 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
@@ -71,7 +76,7 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
@@ -89,7 +94,7 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
@@ -107,7 +112,7 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
@@ -125,7 +130,7 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
@@ -143,7 +148,7 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
@@ -161,11 +166,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_MULT;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -179,11 +184,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_MULTU;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -197,11 +202,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_DIV;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -215,11 +220,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_DIVU;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -233,11 +238,11 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_NOOP;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -251,11 +256,11 @@ module Control #(
                             RegDst = `REGDST_RD;
                             RegWrite = `REGWRITE_UNCOND;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_NOOP;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -269,11 +274,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_MTHI;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -287,11 +292,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_MTLO;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -305,11 +310,11 @@ module Control #(
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_REG;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_NOOP;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
@@ -317,23 +322,43 @@ module Control #(
                             Tuse_rt = `TUSE_IGNORE;
                             Tnew = `TNEW_IGNORE;
                         end
-                        default: begin
+                        6'b001100: begin // syscall
                             ALUSrc = `ALUSRC_IGNORE;
                             RegSrc = `REGSRC_IGNORE;
                             RegDst = `REGDST_IGNORE;
                             RegWrite = `REGWRITE_DISABLE;
                             MemWrite = `MEMWRITE_DISABLE;
-                            DEop = `DEOP_IGNORE;
+                            DEop = `DEOP_NOOP;
                             Branch = `BRANCH_DISABLE;
                             Jump = `JUMP_DISABLE;
                             EXTop = `EXTOP_IGNORE;
-                            ALUop = `ALUOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_NOOP;
                             CMPop = `CMPOP_IGNORE;
                             CMPSrc = `CMPSRC_IGNORE;
                             Tuse_rs = `TUSE_IGNORE;
                             Tuse_rt = `TUSE_IGNORE;
                             Tnew = `TNEW_IGNORE;
+                            exception = `EXCEPTION_SYSCALL;
+                        end
+                        default: begin  // RI
+                            ALUSrc = `ALUSRC_IGNORE;
+                            RegSrc = `REGSRC_IGNORE;
+                            RegDst = `REGDST_IGNORE;
+                            RegWrite = `REGWRITE_DISABLE;
+                            MemWrite = `MEMWRITE_DISABLE;
+                            DEop = `DEOP_NOOP;
+                            Branch = `BRANCH_DISABLE;
+                            Jump = `JUMP_DISABLE;
+                            EXTop = `EXTOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
+                            MDUop = `MDUOP_NOOP;
+                            CMPop = `CMPOP_IGNORE;
+                            CMPSrc = `CMPSRC_IGNORE;
+                            Tuse_rs = `TUSE_IGNORE;
+                            Tuse_rt = `TUSE_IGNORE;
+                            Tnew = `TNEW_IGNORE;
+                            exception = `EXCEPTION_RI;
                         end
                     endcase
                 end
@@ -343,7 +368,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_SIGN;
@@ -361,7 +386,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_ZERO;
@@ -379,7 +404,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_ZERO;
@@ -435,7 +460,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_NOOP;
+                    DEop = `DEOP_WORD;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_SIGN;
@@ -454,7 +479,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_DISABLE;
                     MemWrite = `MEMWRITE_BYTE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_SIGN;
@@ -472,7 +497,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_DISABLE;
                     MemWrite = `MEMWRITE_HALF;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_SIGN;
@@ -490,7 +515,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_DISABLE;
                     MemWrite = `MEMWRITE_WORD;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_SIGN;
@@ -508,11 +533,11 @@ module Control #(
                     RegDst = `REGDST_IGNORE;
                     RegWrite = `REGWRITE_DISABLE;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_UNLIKELY;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_IGNORE;
-                    ALUop = `ALUOP_IGNORE;
+                    ALUop = `ALUOP_NOOP;
                     MDUop = `MDUOP_NOOP;
                     CMPop = `CMPOP_EQ;
                     CMPSrc = `CMPSRC_RT;
@@ -526,11 +551,11 @@ module Control #(
                     RegDst = `REGDST_IGNORE;
                     RegWrite = `REGWRITE_DISABLE;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_UNLIKELY;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_IGNORE;
-                    ALUop = `ALUOP_IGNORE;
+                    ALUop = `ALUOP_NOOP;
                     MDUop = `MDUOP_NOOP;
                     CMPop = `CMPOP_NE;
                     CMPSrc = `CMPSRC_RT;
@@ -544,7 +569,7 @@ module Control #(
                     RegDst = `REGDST_RT;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_UPPER;
@@ -562,11 +587,11 @@ module Control #(
                     RegDst = `REGDST_RA;
                     RegWrite = `REGWRITE_UNCOND;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_INDEX;
                     EXTop = `EXTOP_IGNORE;
-                    ALUop = `ALUOP_IGNORE;
+                    ALUop = `ALUOP_NOOP;
                     MDUop = `MDUOP_NOOP;
                     CMPop = `CMPOP_IGNORE;
                     CMPSrc = `CMPSRC_IGNORE;
@@ -574,23 +599,102 @@ module Control #(
                     Tuse_rt = `TUSE_IGNORE;
                     Tnew = 2'd0;
                 end
-                default: begin
+                6'b010000: begin
+                    case (rs)
+                        5'b00000: begin  // mfc0
+                            ALUSrc = `ALUSRC_IGNORE;
+                            RegSrc = `REGSRC_CP0;
+                            RegDst = `REGDST_RT;
+                            RegWrite = `REGWRITE_UNCOND;
+                            MemWrite = `MEMWRITE_DISABLE;
+                            DEop = `DEOP_NOOP;
+                            Branch = `BRANCH_DISABLE;
+                            Jump = `JUMP_DISABLE;
+                            EXTop = `EXTOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
+                            MDUop = `MDUOP_NOOP;
+                            CMPop = `CMPOP_IGNORE;
+                            CMPSrc = `CMPSRC_IGNORE;
+                            Tuse_rs = `TUSE_IGNORE;
+                            Tuse_rt = `TUSE_IGNORE;
+                            Tnew = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                        end
+                        5'b00100: begin  // mtc0
+                            ALUSrc = `ALUSRC_IGNORE;
+                            RegSrc = `REGSRC_IGNORE;
+                            RegDst = `REGDST_IGNORE;
+                            RegWrite = `REGWRITE_DISABLE;
+                            MemWrite = `MEMWRITE_DISABLE;
+                            DEop = `DEOP_NOOP;
+                            CP0Write = 1'b1;
+                            Branch = `BRANCH_DISABLE;
+                            Jump = `JUMP_DISABLE;
+                            EXTop = `EXTOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
+                            MDUop = `MDUOP_NOOP;
+                            CMPop = `CMPOP_IGNORE;
+                            CMPSrc = `CMPSRC_IGNORE;
+                            Tuse_rs = `TUSE_IGNORE;
+                            Tuse_rt = 2'd2;
+                            Tnew = `TNEW_IGNORE;
+                        end
+                        6'b011000: begin // eret
+                            ALUSrc = `ALUSRC_IGNORE;
+                            RegSrc = `REGSRC_IGNORE;
+                            RegDst = `REGDST_IGNORE;
+                            RegWrite = `REGWRITE_DISABLE;
+                            MemWrite = `MEMWRITE_DISABLE;
+                            DEop = `DEOP_NOOP;
+                            Branch = `BRANCH_DISABLE;
+                            Jump = `JUMP_EPC;
+                            EXTop = `EXTOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
+                            MDUop = `MDUOP_NOOP;
+                            CMPop = `CMPOP_IGNORE;
+                            CMPSrc = `CMPSRC_IGNORE;
+                            Tuse_rs = `TUSE_IGNORE;
+                            Tuse_rt = `TUSE_IGNORE;
+                            Tnew = `TNEW_IGNORE;
+                        end
+                        default: begin  // RI
+                            ALUSrc = `ALUSRC_IGNORE;
+                            RegSrc = `REGSRC_IGNORE;
+                            RegDst = `REGDST_IGNORE;
+                            RegWrite = `REGWRITE_DISABLE;
+                            MemWrite = `MEMWRITE_DISABLE;
+                            DEop = `DEOP_NOOP;
+                            Branch = `BRANCH_DISABLE;
+                            Jump = `JUMP_DISABLE;
+                            EXTop = `EXTOP_IGNORE;
+                            ALUop = `ALUOP_NOOP;
+                            MDUop = `MDUOP_NOOP;
+                            CMPop = `CMPOP_IGNORE;
+                            CMPSrc = `CMPSRC_IGNORE;
+                            Tuse_rs = `TUSE_IGNORE;
+                            Tuse_rt = `TUSE_IGNORE;
+                            Tnew = `TNEW_IGNORE;
+                            exception = `EXCEPTION_RI;
+                        end
+                    endcase
+                end
+                default: begin  // RI
                     ALUSrc = `ALUSRC_IGNORE;
                     RegSrc = `REGSRC_IGNORE;
                     RegDst = `REGDST_IGNORE;
                     RegWrite = `REGWRITE_DISABLE;
                     MemWrite = `MEMWRITE_DISABLE;
-                    DEop = `DEOP_IGNORE;
+                    DEop = `DEOP_NOOP;
                     Branch = `BRANCH_DISABLE;
                     Jump = `JUMP_DISABLE;
                     EXTop = `EXTOP_IGNORE;
-                    ALUop = `ALUOP_IGNORE;
+                    ALUop = `ALUOP_NOOP;
                     MDUop = `MDUOP_NOOP;
                     CMPop = `CMPOP_IGNORE;
                     CMPSrc = `CMPSRC_IGNORE;
                     Tuse_rs = `TUSE_IGNORE;
                     Tuse_rt = `TUSE_IGNORE;
                     Tnew = `TNEW_IGNORE;
+                    exception = `EXCEPTION_RI;
                 end
             endcase
         end

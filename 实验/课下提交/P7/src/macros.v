@@ -8,9 +8,6 @@
 `timescale 1ns / 1ps
 `endif
 
-// 初始化值定义
-`define PC_INIT 32'h00003000
-
  // 指令格式定义
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
@@ -30,14 +27,20 @@
 `define INDEX_LSB 0
 
  // 内存地址空间定义
-`define MEM_LSA 32'h00000000
-`define MEM_MSA 32'h00002fff
+`define DM_LSA 32'h00000000
+`define DM_MSA 32'h00002fff
+`define IM_LSA 32'h00003000
+`define IM_MSA 32'h00006fff
 `define TIMER0_LSA 32'h00007f00
 `define TIMER0_MSA 32'h00007f0b
 `define TIMER1_LSA 32'h00007f10
-`define TIMEE1_MSA 32'h00007f1b
+`define TIMER1_MSA 32'h00007f1b
 `define INT_LSA 32'h00007f20
 `define INT_MSA 32'h00007f23
+
+// 指令地址定义
+`define PC_INIT 32'h00003000
+`define EXC_ADDR 32'h00004180
 
 // CP0 寄存器定义
 `define SR_NUMBER 12
@@ -87,6 +90,7 @@
 `define JUMP_DISABLE 2'b00
 `define JUMP_INDEX 2'b01
 `define JUMP_REG 2'b10
+`define JUMP_EPC 2'b11
 
 `define EXTOP_SIZE 2
 `define EXTOP_IGNORE 2'b00
@@ -120,18 +124,20 @@
 `define ALUSRC2_RS 2'b11
 
 `define ALUOP_SIZE 4
-`define ALUOP_IGNORE 4'b0000
-`define ALUOP_ADD 4'b0000
-`define ALUOP_SUB 4'b0001
-`define ALUOP_AND 4'b0010
-`define ALUOP_OR 4'b0011
-`define ALUOP_XOR 4'b0100
-`define ALUOP_NOR 4'b0101
-`define ALUOP_SLL 4'b0110
-`define ALUOP_SRL 4'b0111
-`define ALUOP_SRA 4'b1000
-`define ALUOP_LT 4'b1001
-`define ALUOP_LTU 4'b1010
+`define ALUOP_NOOP 4'b0000
+`define ALUOP_ADD 4'b0001
+`define ALUOP_ADDU 4'b0010
+`define ALUOP_SUB 4'b0011
+`define ALUOP_SUBU 4'b0100
+`define ALUOP_AND 4'b0101
+`define ALUOP_OR 4'b0110
+`define ALUOP_XOR 4'b0111
+`define ALUOP_NOR 4'b1000
+`define ALUOP_SLL 4'b1001
+`define ALUOP_SRL 4'b1010
+`define ALUOP_SRA 4'b1011
+`define ALUOP_LT 4'b1100
+`define ALUOP_LTU 4'b1101
 
 `define MDUOP_SIZE 3
 `define MDUOP_NOOP 3'b000
@@ -153,12 +159,12 @@
 `define MEMWRITE_BYTE 2'b11
 
 `define DEOP_SIZE 3
-`define DEOP_IGNORE 3'b000
 `define DEOP_NOOP 3'b000
-`define DEOP_BYTE_UNSIGNED 3'b001
-`define DEOP_BYTE_SIGNED 3'b010
-`define DEOP_HALF_UNSIGNED 3'b011
-`define DEOP_HALF_SIGNED 3'b100
+`define DEOP_WORD 3'b001
+`define DEOP_BYTE_UNSIGNED 3'b010
+`define DEOP_BYTE_SIGNED 3'b011
+`define DEOP_HALF_UNSIGNED 3'b100
+`define DEOP_HALF_SIGNED 3'b101
 
 `define REGSRC_SIZE 3
 `define REGSRC_IGNORE 3'b000
@@ -167,6 +173,7 @@
 `define REGSRC_PC8 3'b010
 `define REGSRC_HI 3'b011
 `define REGSRC_LO 3'b100
+`define REGSRC_CP0 3'b101
 
 `define REGDST_SIZE 2
 `define REGDST_IGNORE 2'b00
@@ -179,6 +186,11 @@
 `define REGWRITE_UNCOND 2'b01
 `define REGWRITE_COND 2'b10
 
+`define EXCEPTION_SIZE 2
+`define EXCEPTION_NONE 2'b00
+`define EXCEPTION_RI 2'b01
+`define EXCEPTION_SYSCALL 2'b10
+
 // 冒险信号定义
 `define FWD_FROM_SIZE 2
 `define FWD_FROM_DISABLE 2'b00
@@ -187,11 +199,13 @@
 `define FWD_FROM_MW 2'b11
 
 // 异常码定义
-`define INT 5'd0
-`define ADEL 5'd4
-`define ADES 5'd5
-`define SYSCALL 5'd8
-`define RI 5'd10
-`define OV 5'd12
+`define EXCCODE_SIZE 5
+`define EXCCODE_NONE 5'd0
+`define EXCCODE_INT 5'd0
+`define EXCCODE_ADEL 5'd4
+`define EXCCODE_ADES 5'd5
+`define EXCCODE_SYSCALL 5'd8
+`define EXCCODE_RI 5'd10
+`define EXCCODE_OV 5'd12
 
 `endif
