@@ -1,13 +1,13 @@
 `include "macros.v"
 
 module GRF (
-    input wire clk,
-    input wire reset,
-    input wire [4:0] read_number1,
-    input wire [4:0] read_number2,
-    input wire [4:0] write_number,
-    input wire write_enable,
-    input wire [31:0] write_data,
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [ 4:0] read_number1,
+    input  wire [ 4:0] read_number2,
+    input  wire [ 4:0] write_number,
+    input  wire        write_enable,
+    input  wire [31:0] write_data,
     output wire [31:0] read_data1,
     output wire [31:0] read_data2
 );

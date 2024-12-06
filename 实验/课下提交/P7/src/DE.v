@@ -1,11 +1,11 @@
 `include "macros.v"
 
 module DE (
-    input wire [31:0] ADDR,
-    input wire [31:0] data_in,
-    input wire [`DEOP_SIZE - 1:0] operation,
-    output reg [31:0] data_out,
-    output wire exception
+    input  wire [            31:0] ADDR,
+    input  wire [            31:0] data_in,
+    input  wire [`DEOP_SIZE - 1:0] operation,
+    output reg  [            31:0] data_out,
+    output wire                    exception
 );
     wire ADDR_valid = ADDR >= `DM_LSA && ADDR <= `DM_MSA ||
                       ADDR >= `TIMER0_LSA && ADDR <= `TIMER0_MSA ||
@@ -56,7 +56,7 @@ module DE (
                     default: data_out = 32'hxxxxxxxx;
                 endcase
             end
-            default: data_out = 32'hxxxxxxxx;
+            default:    data_out = 32'hxxxxxxxx;
         endcase
     end
 endmodule

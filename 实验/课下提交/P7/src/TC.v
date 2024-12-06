@@ -5,26 +5,26 @@
 `define COUNT mem[2]
 
 module TC (
-    input wire clk,
-    input wire reset,
-    input wire [31:2] Addr,
-    input wire WE,
-    input wire [31:0] Din,
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [31:2] Addr,
+    input  wire        WE,
+    input  wire [31:0] Din,
     output wire [31:0] Dout,
-    output wire IRQ
+    output wire        IRQ
 );
     localparam [1:0] IDLE = 2'b00, LOAD = 2'b01, CNT = 2'b10, INT = 2'b11;
-    reg [1:0] state;
-    reg [31:0] mem[2:0];
+    reg [ 1:0] state;
+    reg [31:0] mem   [2:0];
 
-    reg _IRQ;
+    reg        _IRQ;
     assign IRQ  = `CTRL[3] & _IRQ;
 
     assign Dout = mem[Addr[3:2]];
 
-    wire [31:0] load = Addr[3:2] == 0 ? {28'h0, Din[3:0]} : Din;
+    wire    [31:0] load = Addr[3:2] == 0 ? {28'h0, Din[3:0]} : Din;
 
-    integer i;
+    integer        i;
     always @(posedge clk) begin
         if (reset) begin
             state <= 0;

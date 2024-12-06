@@ -1,10 +1,10 @@
 `include "macros.v"
 
 module CMP (
-    input wire signed [31:0] operand1,
-    input wire signed [31:0] operand2,
-    input wire [`CMPOP_SIZE - 1:0] operation,
-    output reg result
+    input  wire signed [             31:0] operand1,
+    input  wire signed [             31:0] operand2,
+    input  wire        [`CMPOP_SIZE - 1:0] operation,
+    output reg                             result
 );
     always @(*) begin
         case (operation)

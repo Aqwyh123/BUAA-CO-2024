@@ -39,65 +39,65 @@ module mips (
     wire [5:0] IRQ = {3'b000, interrupt, timer1_IRQ, timer0_IRQ};  // 中断信号
 
     CPU cpu (  // CPU
-        .clk(clk),
-        .reset(reset),
-        .HWInt(IRQ),
-        .PC(macroscopic_pc),
-        .IM_ADDR(i_inst_addr),
-        .IM_read_data(i_inst_rdata),
-        .MEM_ADDR(MEM_ADDR),
-        .MEM_read_data(MEM_RD),
-        .MEM_write_data(MEM_WD),
+        .clk             (clk),
+        .reset           (reset),
+        .HWInt           (IRQ),
+        .PC              (macroscopic_pc),
+        .IM_ADDR         (i_inst_addr),
+        .IM_read_data    (i_inst_rdata),
+        .MEM_ADDR        (MEM_ADDR),
+        .MEM_read_data   (MEM_RD),
+        .MEM_write_data  (MEM_WD),
         .MEM_write_enable(MEM_WE),
-        .MEM_PC(m_inst_addr),
+        .MEM_PC          (m_inst_addr),
         .GRF_write_enable(w_grf_we),
         .GRF_write_number(w_grf_addr),
-        .GRF_write_data(w_grf_wdata),
-        .GRF_PC(w_inst_addr)
+        .GRF_write_data  (w_grf_wdata),
+        .GRF_PC          (w_inst_addr)
     );
 
     Bridge bridge (
-        .PrAddr(MEM_ADDR),
-        .PrRD(MEM_RD),
-        .PrWD(MEM_WD),
-        .PrWE(MEM_WE),
-        .DM_RD(DM_RD),
+        .PrAddr   (MEM_ADDR),
+        .PrRD     (MEM_RD),
+        .PrWD     (MEM_WD),
+        .PrWE     (MEM_WE),
+        .DM_RD    (DM_RD),
         .timer0_RD(timer0_RD),
         .timer1_RD(timer1_RD),
-        .INT_RD(INT_RD),
-        .DEV_Addr(DEV_ADDR),
-        .DEV_WD(DEV_WD),
-        .DM_WE(DM_WE),
+        .INT_RD   (INT_RD),
+        .DEV_Addr (DEV_ADDR),
+        .DEV_WD   (DEV_WD),
+        .DM_WE    (DM_WE),
         .timer0_WE(timer0_WE),
         .timer1_WE(timer1_WE),
-        .INT_WE(INT_WE)
+        .INT_WE   (INT_WE)
     );
 
-    assign m_data_addr = DEV_ADDR;  // DM 读写地址
-    assign m_data_wdata = DEV_WD;  // DM 待写入数据
+    assign m_data_addr   = DEV_ADDR;  // DM 读写地址
+    assign m_data_wdata  = DEV_WD;  // DM 待写入数据
     assign m_data_byteen = DM_WE;  // DM 字节使能信号
-    assign DM_RD = m_data_rdata;  // DM 读取数据
+    assign DM_RD         = m_data_rdata;  // DM 读取数据
 
     TC timer0 (  // 定时器 0
-        .clk(clk),
+        .clk  (clk),
         .reset(reset),
-        .Addr(DEV_ADDR[31:2]),
-        .WE(timer0_WE),
-        .Din(DEV_WD),
-        .Dout(timer0_RD),
-        .IRQ(timer0_IRQ)
+        .Addr (DEV_ADDR[31:2]),
+        .WE   (timer0_WE),
+        .Din  (DEV_WD),
+        .Dout (timer0_RD),
+        .IRQ  (timer0_IRQ)
     );
     TC timer1 (  // 定时器 1
-        .clk(clk),
+        .clk  (clk),
         .reset(reset),
-        .Addr(DEV_ADDR[31:2]),
-        .WE(timer1_WE),
-        .Din(DEV_WD),
-        .Dout(timer1_RD),
-        .IRQ(timer1_IRQ)
+        .Addr (DEV_ADDR[31:2]),
+        .WE   (timer1_WE),
+        .Din  (DEV_WD),
+        .Dout (timer1_RD),
+        .IRQ  (timer1_IRQ)
     );
 
-    assign INT_RD = 32'h00000000;  // 规定为 0
-    assign m_int_addr = DEV_ADDR;
+    assign INT_RD       = 32'h00000000;  // 规定为 0
+    assign m_int_addr   = DEV_ADDR;
     assign m_int_byteen = INT_WE;
 endmodule

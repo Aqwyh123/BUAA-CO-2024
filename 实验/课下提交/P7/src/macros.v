@@ -8,7 +8,7 @@
 `timescale 1ns / 1ps
 `endif
 
- // 指令格式定义
+// 指令格式定义
 `define OPCODE_MSB 31
 `define OPCODE_LSB 26
 `define FUNCT_MSB 5
@@ -26,7 +26,7 @@
 `define INDEX_MSB 25
 `define INDEX_LSB 0
 
- // 内存地址空间定义
+// 内存地址空间定义
 `define DM_LSA 32'h00000000
 `define DM_MSA 32'h00002fff
 `define IM_LSA 32'h00003000

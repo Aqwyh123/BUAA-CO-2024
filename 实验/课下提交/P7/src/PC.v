@@ -1,11 +1,11 @@
 `include "macros.v"
 
 module PC (
-    input wire clk,
-    input wire reset,
-    input wire req,
-    input wire stall,
-    input wire [31:0] next_PC,
+    input  wire        clk,
+    input  wire        reset,
+    input  wire        req,
+    input  wire        stall,
+    input  wire [31:0] next_PC,
     output wire [31:0] PC
 );
     reg [31:0] PC_reg;

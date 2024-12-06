@@ -12,23 +12,23 @@
 `define EXCCODE `CAUSE[`EXCCODE_MSB:`EXCCODE_LSB] // 异常编码
 
 module CP0 (
-    input wire clk,
-    input wire reset,
-    input wire [4:0] number,
+    input  wire        clk,
+    input  wire        reset,
+    input  wire [ 4:0] number,
     output wire [31:0] read_data,
-    input wire write_enable,
-    input wire [31:0] write_data,
-    input wire [31:0] VPC,
-    input wire BDIn,
-    input wire [4:0] ExcCodeIn,
-    input wire [5:0] HWInt,
-    input wire EXLClr,
+    input  wire        write_enable,
+    input  wire [31:0] write_data,
+    input  wire [31:0] VPC,
+    input  wire        BDIn,
+    input  wire [ 4:0] ExcCodeIn,
+    input  wire [ 5:0] HWInt,
+    input  wire        EXLClr,
     output wire [31:0] EPCOut,
-    output wire [1:0] Request
+    output wire [ 1:0] Request
 );
     reg [31:0] regfile[0:31];
     assign read_data = regfile[number];
-    assign EPCOut = regfile[`EPC_NUMBER];
+    assign EPCOut    = regfile[`EPC_NUMBER];
 
     wire interupt = `IE & ~`EXL & |(`IM & HWInt); // 全局中断使能且不在异常处理状态且相应中断使能且相应中断请求
     wire exception = ~`EXL & |ExcCodeIn;  // 不在异常处理状态且有异常请求
@@ -58,15 +58,15 @@ module CP0 (
                 if (EXLClr) begin  // 响应优先
                     `EXL <= 1'b0;
                 end else if (interupt) begin  // 中断次之
-                    `EXL <= 1'b1;
+                    `EXL     <= 1'b1;
                     `EXCCODE <= `EXCCODE_INT;
-                    `BD <= BDIn;
-                    `EPC <= BDIn ? VPC : VPC - 32'd4;
+                    `BD      <= BDIn;
+                    `EPC     <= BDIn ? VPC : VPC - 32'd4;
                 end else if (exception) begin  // 异常最次
-                    `EXL <= 1'b1;
+                    `EXL     <= 1'b1;
                     `EXCCODE <= ExcCodeIn;
-                    `BD <= BDIn;
-                    `EPC <= BDIn ? VPC : VPC - 32'd4;
+                    `BD      <= BDIn;
+                    `EPC     <= BDIn ? VPC : VPC - 32'd4;
                 end
             end
         end

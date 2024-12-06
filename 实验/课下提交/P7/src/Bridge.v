@@ -1,21 +1,21 @@
 `include "macros.v"
 
 module Bridge (
-    input wire req,
-    input wire [31:0] PrAddr,
-    input wire [31:0] PrWD,
-    input wire [3:0] PrWE,
-    input wire [31:0] DM_RD,
-    input wire [31:0] timer0_RD,
-    input wire [31:0] timer1_RD,
-    input wire [31:0] INT_RD,
+    input  wire        req,
+    input  wire [31:0] PrAddr,
+    input  wire [31:0] PrWD,
+    input  wire [ 3:0] PrWE,
+    input  wire [31:0] DM_RD,
+    input  wire [31:0] timer0_RD,
+    input  wire [31:0] timer1_RD,
+    input  wire [31:0] INT_RD,
     output wire [31:0] PrRD,
     output wire [31:0] DEV_Addr,
     output wire [31:0] DEV_WD,
-    output wire [3:0] DM_WE,
-    output wire timer0_WE,
-    output wire timer1_WE,
-    output wire [3:0] INT_WE
+    output wire [ 3:0] DM_WE,
+    output wire        timer0_WE,
+    output wire        timer1_WE,
+    output wire [ 3:0] INT_WE
 );
     wire hit_DM = PrAddr >= `DM_LSA && PrAddr <= `DM_MSA;
     wire hit_timer0 = PrAddr >= `TIMER0_LSA && PrAddr <= `TIMER0_MSA;
