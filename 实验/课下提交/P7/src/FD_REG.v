@@ -16,7 +16,7 @@ module FD_REG (
     output wire D_BD
 );
     reg [31:0] D_PC_reg, D_instr_reg;
-    reg [`EXCCODE_SIZE-1:0] D_ExcCode_reg;
+    reg [`EXCCODE_SIZE - 1:0] D_ExcCode_reg;
     reg D_BD_reg;
     assign D_PC = D_PC_reg;
     assign D_instr = D_instr_reg;

@@ -21,7 +21,7 @@ module Control #(
     output reg signed [`T_SIZE - 1:0] Tuse_rs,
     output reg signed [`T_SIZE - 1:0] Tuse_rt,
     output reg signed [`T_SIZE - 1:0] Tnew,
-    output reg [`EXCEPTION_SIZE - 1:0 ] exception
+    output reg [`EXCEPTION_SIZE - 1:0] exception
 );
     wire [5:0] opcode = instr[`OPCODE_MSB:`OPCODE_LSB];
     wire [5:0] funct = instr[`FUNCT_MSB:`FUNCT_LSB];
@@ -322,7 +322,7 @@ module Control #(
                             Tuse_rt = `TUSE_IGNORE;
                             Tnew = `TNEW_IGNORE;
                         end
-                        6'b001100: begin // syscall
+                        6'b001100: begin  // syscall
                             ALUSrc = `ALUSRC_IGNORE;
                             RegSrc = `REGSRC_IGNORE;
                             RegDst = `REGDST_IGNORE;
@@ -617,7 +617,8 @@ module Control #(
                             CMPSrc = `CMPSRC_IGNORE;
                             Tuse_rs = `TUSE_IGNORE;
                             Tuse_rt = `TUSE_IGNORE;
-                            Tnew = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                            Tnew = PIPELINE == `STAGE_EXECUTE ? 2'd2 :
+                                   PIPELINE == `STAGE_MEMORY ? 2'd1 : 2'd0;
                         end
                         5'b00100: begin  // mtc0
                             ALUSrc = `ALUSRC_IGNORE;
@@ -638,7 +639,7 @@ module Control #(
                             Tuse_rt = 2'd2;
                             Tnew = `TNEW_IGNORE;
                         end
-                        6'b011000: begin // eret
+                        6'b011000: begin  // eret
                             ALUSrc = `ALUSRC_IGNORE;
                             RegSrc = `REGSRC_IGNORE;
                             RegDst = `REGDST_IGNORE;

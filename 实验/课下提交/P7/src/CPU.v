@@ -21,12 +21,7 @@ module CPU (
     output wire [31:0] GRF_write_data,    // GRF 待写入数据
     output wire [31:0] GRF_PC             // GRF PC
 );
-    wire [31:0] F_PC, D_PC, E_PC8, M_PC8, W_PC8;
-`ifdef LOCAL
-    wire [31:0] E_PC = E_PC8 >= 32'h00003008 ? E_PC8 - 32'd8 : 32'h00000000;
-    wire [31:0] M_PC = M_PC8 >= 32'h00003008 ? M_PC8 - 32'd8 : 32'h00000000;
-    wire [31:0] W_PC = W_PC8 >= 32'h00003008 ? W_PC8 - 32'd8 : 32'h00000000;
-`endif
+    wire [31:0] F_PC, D_PC, E_PC, M_PC, W_PC;
     wire [31:0] F_instr_raw;
     wire [31:0] F_instr, D_instr, E_instr, M_instr, W_instr;
     reg D_REG_write_enable;
@@ -70,9 +65,9 @@ module CPU (
     wire [`JUMP_SIZE - 1:0] M_Jump;
     wire [`MEMWRITE_SIZE - 1:0] M_MemWrite;
     wire [`DEOP_SIZE - 1:0] M_DEop;
-    wire [31:0] M_ALU_result, M_MEM_read_data_raw, M_MEM_read_data, M_HI_LO, M_CP0_read_data;
     wire M_CP0_write_enable;
-    wire [31:0] M_MEM_write_data;
+    wire [31:0] M_ALU_result, M_MEM_read_data_raw, M_HI_LO, M_MEM_write_data;
+    wire [31:0] M_MEM_read_data, M_CP0_read_data;
     wire [3:0] M_MEM_write_enable;
     wire M_BE_exception, M_DE_exception;
 
@@ -80,12 +75,12 @@ module CPU (
     reg [31:0] W_REG_write_data;
 
     wire [31:0] D_rs_data_raw, D_rt_data_raw, E_rs_data_raw, E_rt_data_raw, M_rt_data_raw;
-    wire [31:0] E_FWD_data = E_RegSrc == `REGSRC_PC8 ? E_PC8 : E_EXT_result;
-    wire [31:0] M_FWD_data = M_RegSrc == `REGSRC_PC8 ? M_PC8 :
+    wire [31:0] E_FWD_data = E_RegSrc == `REGSRC_PC8 ? E_PC + 32'd8 : E_EXT_result;
+    wire [31:0] M_FWD_data = M_RegSrc == `REGSRC_PC8 ? M_PC + 32'd8 :
                              M_RegSrc == `REGSRC_HI || M_RegSrc == `REGSRC_LO ? M_HI_LO :
                              M_ALU_result;
     wire [31:0] W_FWD_data = W_REG_write_data;
-    // D_data 已经经过内部转发，即 W->D ALU/MEM/PC8/HL 转发
+    // D_data 已经经过内部转发，即 W->D ALU/MEM/PC8/HL/CP0 转发
     wire [31:0] D_rs_data = FWD_to_D_rs == `FWD_FROM_DE ? E_FWD_data :
                             FWD_to_D_rs == `FWD_FROM_EM ? M_FWD_data :
                             D_rs_data_raw;
@@ -105,14 +100,16 @@ module CPU (
     wire F_BD, D_BD, E_BD, M_BD;
 
     wire [31:0] EPC;
-    wire res; // 异常/中断请求
-    assign PC = M_PC8 >= 32'h00003008 ? M_PC8 - 32'd8 : 32'h00000000; // 宏观 PC
+    wire [1:0] Request;
+    wire irq = Request[0], erq = Request[1];
+    wire res = irq || erq;  // 异常/中断请求
+    assign PC = M_PC;  // 宏观 PC
 
-    assign MEM_PC = M_PC8 >= 32'h00003008 ? M_PC8 - 32'd8 : 32'h00000000;  // MEM PC
+    assign MEM_PC = M_PC;  // MEM PC
     assign GRF_write_number = W_REG_write_number;  // GRF 待写入寄存器编号
     assign GRF_write_data = W_REG_write_data;  // GRF 待写入数据
     assign GRF_write_enable = W_REG_write_enable;  // GRF 写使能信号
-    assign GRF_PC = W_PC8 >= 32'h00003008 ? W_PC8 - 32'd8 : 32'h00000000;  // GRF PC
+    assign GRF_PC = W_PC;  // GRF PC
 
     HazardControl hazard_control (
         .D_rs(D_instr[`RS_MSB:`RS_LSB]),
@@ -151,7 +148,6 @@ module CPU (
     );
 
     // 取指阶段 Fetch 开始
-
     Control #(`STAGE_FETCH) F_control (  // F 控制器
         .instr(F_instr_raw),
         .exception(F_Control_exception)
@@ -165,6 +161,7 @@ module CPU (
         .next_PC(FD_next_PC),
         .PC(F_PC)
     );
+
     assign IM_ADDR = F_PC;  // IM 读取地址
     assign F_instr_raw = IM_read_data;  // IM 读取数据
     assign F_IM_exception = F_PC[1:0] != 2'b00 || !(F_PC >= `IM_LSA && F_PC <= `IM_MSA);
@@ -184,7 +181,7 @@ module CPU (
         .stall(stall),
         .flush(D_Jump == `JUMP_EPC || D_Branch == `BRANCH_LIKELY && !D_CMP_result),
         .F_PC(F_PC),
-        .F_instr_raw(F_instr_raw),
+        .F_instr(F_instr),
         .F_BD(F_BD),
         .F_ExcCode(F_ExcCode),
         .D_PC(D_PC),
@@ -201,10 +198,10 @@ module CPU (
         .EXTop(D_EXTop),
         .CMPSrc(D_CMPSrc),
         .CMPop(D_CMPop),
+        .MDUop(D_MDUop),
         .RegDst(D_RegDst),
         .RegWrite(D_RegWrite),
         .RegSrc(D_RegSrc),
-        .MDUop(D_MDUop),
         .Tuse_rs(D_Tuse_rs),
         .Tuse_rt(D_Tuse_rt)
     );
@@ -272,7 +269,7 @@ module CPU (
         .req(req),
         .stall(1'b0),
         .flush(stall),
-        .D_PC8(D_PC + 32'd8),
+        .D_PC(D_PC),
         .D_instr(D_instr),
         .D_rs_data(D_rs_data),
         .D_rt_data(D_rt_data),
@@ -281,7 +278,7 @@ module CPU (
         .D_REG_write_enable(D_REG_write_enable),
         .D_BD(D_BD),
         .D_ExcCode(D_ExcCode),
-        .E_PC8(E_PC8),
+        .E_PC(E_PC),
         .E_instr(E_instr),
         .E_rs_data(E_rs_data_raw),
         .E_rt_data(E_rt_data_raw),
@@ -331,9 +328,10 @@ module CPU (
     MDU E_mdu (
         .clk(clk),
         .reset(reset),
+        .req(erq),
         .operand1(E_rs_data),
         .operand2(E_rt_data),
-        .operation(|M_ExcCode ? `MDUOP_NOOP : E_MDUop), // 异常时不执行 MDU 写操作
+        .operation(E_MDUop),  // 异常时不执行 MDU 写操作
         .HI(E_HI),
         .LO(E_LO),
         .start(E_MDU_start),
@@ -351,7 +349,7 @@ module CPU (
         .req(req),
         .stall(1'b0),
         .flush(1'b0),
-        .E_PC8(E_PC8),
+        .E_PC(E_PC),
         .E_instr(E_instr),
         .E_rt_data(E_rt_data),
         .E_ALU_result(E_ALU_result),
@@ -360,7 +358,7 @@ module CPU (
         .E_REG_write_enable(E_REG_write_enable),
         .E_BD(E_BD),
         .E_ExcCode(E_ExcCode),
-        .M_PC8(M_PC8),
+        .M_PC(M_PC),
         .M_instr(M_instr),
         .M_rt_data(M_rt_data_raw),
         .M_ALU_result(M_ALU_result),
@@ -424,7 +422,7 @@ module CPU (
         .HWInt(HWInt),
         .EXLClr(M_Jump == `JUMP_EPC),
         .EPCOut(EPC),
-        .Req(req)
+        .Request(Request)
     );
 
     MW_REG MW_reg (  // MW 流水线寄存器
@@ -433,7 +431,7 @@ module CPU (
         .req(req),
         .stall(1'b0),
         .flush(1'b0),
-        .M_PC8(M_PC8),
+        .M_PC(M_PC),
         .M_instr(M_instr),
         .M_ALU_result(M_ALU_result),
         .M_HI_LO(M_HI_LO),
@@ -441,7 +439,7 @@ module CPU (
         .M_CP0_read_data(M_CP0_read_data),
         .M_REG_write_number(M_REG_write_number),
         .M_REG_write_enable(M_REG_write_enable),
-        .W_PC8(W_PC8),
+        .W_PC(W_PC),
         .W_instr(W_instr),
         .W_ALU_result(W_ALU_result),
         .W_HI_LO(W_HI_LO),
@@ -469,7 +467,7 @@ module CPU (
                 W_REG_write_data = W_MEM_read_data;
             end
             `REGSRC_PC8: begin
-                W_REG_write_data = W_PC8;
+                W_REG_write_data = W_PC + 32'd8;
             end
             `REGSRC_HI: begin
                 W_REG_write_data = W_HI_LO;
