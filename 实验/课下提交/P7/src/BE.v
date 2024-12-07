@@ -14,11 +14,11 @@ module BE (
                       ADDR >= `INT_LSA && ADDR <= `INT_MSA;
     wire ADDR_Timer = ADDR >= `TIMER0_LSA && ADDR <= `TIMER0_MSA ||
                       ADDR >= `TIMER1_LSA && ADDR <= `TIMER1_MSA;
-    wire ADDR_Count = ADDR >= `TIMER0_MSA - 32'd3  && ADDR <= `TIMER0_MSA ||
-                      ADDR >= `TIMER1_MSA - 32'd3  && ADDR <= `TIMER1_MSA;
-    assign exception = !ADDR_valid ||  // 超出地址空间
+    wire ADDR_Count = ADDR >= `TIMER0_LSA + 32'd8  && ADDR <= `TIMER0_MSA ||
+                      ADDR >= `TIMER1_LSA + 32'd8  && ADDR <= `TIMER1_MSA;
+    assign exception = !ADDR_valid && operation != `MEMWRITE_DISABLE ||  // 超出地址空间
         operation == `MEMWRITE_WORD && ADDR[1:0] != 2'b00 ||  // 按字写未对齐
-        operation == `MEMWRITE_HALF && (ADDR[1:0] != 2'b00 || ADDR[1:0] != 2'b10) || // 按半字写未对齐
+        operation == `MEMWRITE_HALF && ADDR[0] == 1'b1 ||  // 按半字写未对齐
         ADDR_Timer && (operation == `MEMWRITE_HALF || operation == `MEMWRITE_BYTE) || // Timer 只许按字写
         ADDR_Count && operation != `MEMWRITE_DISABLE;  // Count 寄存器只读
 

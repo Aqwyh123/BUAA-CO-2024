@@ -42,7 +42,7 @@ module EM_REG (
     always @(posedge clk) begin
         if (reset) begin
             M_instr_reg            <= 32'd0;
-            M_PC_reg               <= 32'd0;
+            M_PC_reg               <= `PC_INIT;
             M_rt_data_reg          <= 32'd0;
             M_ALU_result_reg       <= 32'd0;
             M_HI_LO_reg            <= 32'd0;
@@ -52,7 +52,7 @@ module EM_REG (
             M_BD_reg               <= 1'b0;
         end else if (req) begin
             M_instr_reg            <= 32'd0;
-            M_PC_reg               <= 32'd0;
+            M_PC_reg               <= `EXC_ADDR;
             M_rt_data_reg          <= 32'd0;
             M_ALU_result_reg       <= 32'd0;
             M_HI_LO_reg            <= 32'd0;
@@ -72,14 +72,14 @@ module EM_REG (
             M_BD_reg               <= M_BD_reg;
         end else if (flush) begin
             M_instr_reg            <= 32'd0;
-            M_PC_reg               <= 32'd0;
+            M_PC_reg               <= E_PC;
             M_rt_data_reg          <= 32'd0;
             M_ALU_result_reg       <= 32'd0;
             M_HI_LO_reg            <= 32'd0;
             M_REG_write_number_reg <= 5'd0;
             M_REG_write_enable_reg <= 1'b0;
             M_ExcCode_reg          <= `EXCCODE_SIZE'd0;
-            M_BD_reg               <= 1'b0;
+            M_BD_reg               <= E_BD;
         end else begin
             M_instr_reg            <= E_instr;
             M_PC_reg               <= E_PC;

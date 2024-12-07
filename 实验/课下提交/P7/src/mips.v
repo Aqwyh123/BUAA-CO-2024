@@ -35,6 +35,8 @@ module mips (
     wire timer0_WE, timer1_WE;  // 定时器写使能信号
     wire [3:0] DM_WE, INT_WE;  // 外设字节使能信号
 
+    wire req;  // 中断/异常请求
+
     wire timer0_IRQ, timer1_IRQ;  // 定时器中断信号
     wire [5:0] IRQ = {3'b000, interrupt, timer1_IRQ, timer0_IRQ};  // 中断信号
 
@@ -49,6 +51,7 @@ module mips (
         .MEM_read_data   (MEM_RD),
         .MEM_write_data  (MEM_WD),
         .MEM_write_enable(MEM_WE),
+        .req             (req),
         .MEM_PC          (m_inst_addr),
         .GRF_write_enable(w_grf_we),
         .GRF_write_number(w_grf_addr),
@@ -57,6 +60,7 @@ module mips (
     );
 
     Bridge bridge (
+        .req      (req),
         .PrAddr   (MEM_ADDR),
         .PrRD     (MEM_RD),
         .PrWD     (MEM_WD),

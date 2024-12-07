@@ -5,7 +5,8 @@ module HazardControl (
     input  wire        [                 4:0] D_rt,
     input  wire signed [       `T_SIZE - 1:0] D_Tuse_rs,
     input  wire signed [       `T_SIZE - 1:0] D_Tuse_rt,
-    input  wire                               D_request,
+    input  wire                               D_MDU_request,
+    input  wire                               D_CP0_request,
     input  wire        [                 4:0] E_rs,
     input  wire        [                 4:0] E_rt,
     input  wire        [                 4:0] E_REG_write_number,
@@ -13,7 +14,8 @@ module HazardControl (
     input  wire signed [       `T_SIZE - 1:0] E_Tuse_rs,
     input  wire signed [       `T_SIZE - 1:0] E_Tuse_rt,
     input  wire signed [       `T_SIZE - 1:0] E_Tnew,
-    input  wire                               E_busy,
+    input  wire                               E_MDU_busy,
+    input  wire                               E_CP0_busy,
     input  wire signed [       `T_SIZE - 1:0] M_Tuse_rs,
     input  wire signed [       `T_SIZE - 1:0] M_Tuse_rt,
     input  wire signed [       `T_SIZE - 1:0] M_Tnew,
@@ -56,11 +58,13 @@ module HazardControl (
 
     wire E_stall_rs = E_to_D_A_rs && E_Tnew > D_Tuse_rs;
     wire E_stall_rt = E_to_D_A_rt && E_Tnew > D_Tuse_rt;
-    wire E_stall_hl = D_request && E_busy;
+    wire E_stall_HILO = D_MDU_request && E_MDU_busy;
+    wire E_stall_CP0 = D_CP0_request && E_CP0_busy;
     wire M_stall_rs = M_to_D_A_rs && M_Tnew > D_Tuse_rs;
     wire M_stall_rt = M_to_D_A_rt && M_Tnew > D_Tuse_rt;
 
-    assign stall = E_stall_rs || E_stall_rt || E_stall_hl || M_stall_rs || M_stall_rt;
+    assign stall = E_stall_rs || E_stall_rt || E_stall_HILO || E_stall_CP0 ||
+                   M_stall_rs || M_stall_rt;
     assign FWD_to_D_rs = E_to_D_A_rs && E_Tnew == 2'd0 ? `FWD_FROM_DE :
                          M_to_D_A_rs && M_Tnew == 2'd0 ? `FWD_FROM_EM :
                          `FWD_FROM_DISABLE;

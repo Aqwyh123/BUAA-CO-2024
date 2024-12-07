@@ -3,7 +3,7 @@
 module DE_REG (
     input  wire                       clk,
     input  wire                       reset,
-    inout  wire                       req,
+    input  wire                       req,
     input  wire                       stall,
     input  wire                       flush,
     input  wire [               31:0] D_instr,
@@ -42,7 +42,7 @@ module DE_REG (
     always @(posedge clk) begin
         if (reset) begin
             E_instr_reg            <= 32'd0;
-            E_PC_reg               <= 32'd0;
+            E_PC_reg               <= `PC_INIT;
             E_rs_data_reg          <= 32'd0;
             E_rt_data_reg          <= 32'd0;
             E_EXT_result_reg       <= 32'd0;
@@ -52,7 +52,7 @@ module DE_REG (
             E_BD_reg               <= 1'b0;
         end else if (req) begin
             E_instr_reg            <= 32'd0;
-            E_PC_reg               <= 32'd0;
+            E_PC_reg               <= `EXC_ADDR;
             E_rs_data_reg          <= 32'd0;
             E_rt_data_reg          <= 32'd0;
             E_EXT_result_reg       <= 32'd0;
@@ -72,14 +72,14 @@ module DE_REG (
             E_BD_reg               <= E_BD_reg;
         end else if (flush) begin
             E_instr_reg            <= 32'd0;
-            E_PC_reg               <= 32'd0;
+            E_PC_reg               <= D_PC;
             E_rs_data_reg          <= 32'd0;
             E_rt_data_reg          <= 32'd0;
             E_EXT_result_reg       <= 32'd0;
             E_REG_write_number_reg <= 5'd0;
             E_REG_write_enable_reg <= 1'b0;
             E_ExcCode_reg          <= `EXCCODE_SIZE'd0;
-            E_BD_reg               <= 1'b0;
+            E_BD_reg               <= D_BD;
         end else begin
             E_instr_reg            <= D_instr;
             E_PC_reg               <= D_PC;

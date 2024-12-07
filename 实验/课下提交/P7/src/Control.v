@@ -14,7 +14,6 @@ module Control #(
     output reg        [    `MDUOP_SIZE - 1:0] MDUop,
     output reg        [ `MEMWRITE_SIZE - 1:0] MemWrite,
     output reg        [     `DEOP_SIZE - 1:0] DEop,
-    output reg                                CP0Write,
     output reg        [   `REGSRC_SIZE - 1:0] RegSrc,
     output reg        [   `REGDST_SIZE - 1:0] RegDst,
     output reg        [  `REGWRITE_SIZE -1:0] RegWrite,
@@ -30,7 +29,6 @@ module Control #(
 
     always @(*) begin
         exception = `EXCEPTION_NONE;
-        CP0Write  = 1'b0;
         if (opcode == 6'b000000 && funct == 6'b000000 && rt == 5'b00000) begin  // nop
             ALUSrc   = `ALUSRC_IGNORE;
             RegSrc   = `REGSRC_IGNORE;
@@ -43,7 +41,7 @@ module Control #(
             EXTop    = `EXTOP_IGNORE;
             ALUop    = `ALUOP_NOOP;
             MDUop    = `MDUOP_NOOP;
-            CMPop    = `CMPOP_IGNORE;
+            CMPop    = `CMPOP_NOOP;
             CMPSrc   = `CMPSRC_IGNORE;
             Tuse_rs  = `TUSE_IGNORE;
             Tuse_rt  = `TUSE_IGNORE;
@@ -64,7 +62,25 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_ADD;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
+                            CMPSrc   = `CMPSRC_IGNORE;
+                            Tuse_rs  = 2'd1;
+                            Tuse_rt  = 2'd1;
+                            Tnew     = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                        end
+                        6'b100001: begin  // addu
+                            ALUSrc   = {`ALUSRC2_RT, `ALUSRC1_RS};
+                            RegSrc   = `REGSRC_ALU;
+                            RegDst   = `REGDST_RD;
+                            RegWrite = `REGWRITE_UNCOND;
+                            MemWrite = `MEMWRITE_DISABLE;
+                            DEop     = `DEOP_NOOP;
+                            Branch   = `BRANCH_DISABLE;
+                            Jump     = `JUMP_DISABLE;
+                            EXTop    = `EXTOP_IGNORE;
+                            ALUop    = `ALUOP_ADDU;
+                            MDUop    = `MDUOP_NOOP;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -82,7 +98,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_SUB;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -100,7 +116,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_AND;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -118,7 +134,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_OR;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -136,7 +152,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_LT;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -154,7 +170,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_LTU;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -172,7 +188,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_MULT;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -190,7 +206,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_MULTU;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -208,7 +224,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_DIV;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -226,7 +242,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_DIVU;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = 2'd1;
@@ -244,7 +260,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = `TUSE_IGNORE;
                             Tuse_rt  = `TUSE_IGNORE;
@@ -262,7 +278,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = `TUSE_IGNORE;
                             Tuse_rt  = `TUSE_IGNORE;
@@ -272,15 +288,15 @@ module Control #(
                             ALUSrc   = `ALUSRC_IGNORE;
                             RegSrc   = `REGSRC_IGNORE;
                             RegDst   = `REGDST_IGNORE;
-                            RegWrite = `REGWRITE_DISABLE;
+                            RegWrite = `REGWRITE_HI;
                             MemWrite = `MEMWRITE_DISABLE;
                             DEop     = `DEOP_NOOP;
                             Branch   = `BRANCH_DISABLE;
                             Jump     = `JUMP_DISABLE;
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
-                            MDUop    = `MDUOP_MTHI;
-                            CMPop    = `CMPOP_IGNORE;
+                            MDUop    = `MDUOP_NOOP;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = `TUSE_IGNORE;
@@ -290,15 +306,15 @@ module Control #(
                             ALUSrc   = `ALUSRC_IGNORE;
                             RegSrc   = `REGSRC_IGNORE;
                             RegDst   = `REGDST_IGNORE;
-                            RegWrite = `REGWRITE_DISABLE;
+                            RegWrite = `REGWRITE_LO;
                             MemWrite = `MEMWRITE_DISABLE;
                             DEop     = `DEOP_NOOP;
                             Branch   = `BRANCH_DISABLE;
                             Jump     = `JUMP_DISABLE;
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
-                            MDUop    = `MDUOP_MTLO;
-                            CMPop    = `CMPOP_IGNORE;
+                            MDUop    = `MDUOP_NOOP;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd1;
                             Tuse_rt  = `TUSE_IGNORE;
@@ -316,7 +332,7 @@ module Control #(
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = 2'd0;
                             Tuse_rt  = `TUSE_IGNORE;
@@ -334,7 +350,7 @@ module Control #(
                             EXTop     = `EXTOP_IGNORE;
                             ALUop     = `ALUOP_NOOP;
                             MDUop     = `MDUOP_NOOP;
-                            CMPop     = `CMPOP_IGNORE;
+                            CMPop     = `CMPOP_NOOP;
                             CMPSrc    = `CMPSRC_IGNORE;
                             Tuse_rs   = `TUSE_IGNORE;
                             Tuse_rt   = `TUSE_IGNORE;
@@ -353,7 +369,7 @@ module Control #(
                             EXTop     = `EXTOP_IGNORE;
                             ALUop     = `ALUOP_NOOP;
                             MDUop     = `MDUOP_NOOP;
-                            CMPop     = `CMPOP_IGNORE;
+                            CMPop     = `CMPOP_NOOP;
                             CMPSrc    = `CMPSRC_IGNORE;
                             Tuse_rs   = `TUSE_IGNORE;
                             Tuse_rt   = `TUSE_IGNORE;
@@ -374,7 +390,25 @@ module Control #(
                     EXTop    = `EXTOP_SIGN;
                     ALUop    = `ALUOP_ADD;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
+                    CMPSrc   = `CMPSRC_IGNORE;
+                    Tuse_rs  = 2'd1;
+                    Tuse_rt  = `TUSE_IGNORE;
+                    Tnew     = PIPELINE == `STAGE_EXECUTE ? 2'd1 : 2'd0;
+                end
+                6'b001001: begin  // addiu
+                    ALUSrc   = {`ALUSRC2_IMM_SHAMT, `ALUSRC1_RS};
+                    RegSrc   = `REGSRC_ALU;
+                    RegDst   = `REGDST_RT;
+                    RegWrite = `REGWRITE_UNCOND;
+                    MemWrite = `MEMWRITE_DISABLE;
+                    DEop     = `DEOP_NOOP;
+                    Branch   = `BRANCH_DISABLE;
+                    Jump     = `JUMP_DISABLE;
+                    EXTop    = `EXTOP_SIGN;
+                    ALUop    = `ALUOP_ADDU;
+                    MDUop    = `MDUOP_NOOP;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = `TUSE_IGNORE;
@@ -392,7 +426,7 @@ module Control #(
                     EXTop    = `EXTOP_ZERO;
                     ALUop    = `ALUOP_AND;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = `TUSE_IGNORE;
@@ -410,7 +444,7 @@ module Control #(
                     EXTop    = `EXTOP_ZERO;
                     ALUop    = `ALUOP_OR;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = `TUSE_IGNORE;
@@ -428,7 +462,7 @@ module Control #(
                     EXTop = `EXTOP_SIGN;
                     ALUop = `ALUOP_ADD;
                     MDUop = `MDUOP_NOOP;
-                    CMPop = `CMPOP_IGNORE;
+                    CMPop = `CMPOP_NOOP;
                     CMPSrc = `CMPSRC_IGNORE;
                     Tuse_rs = 2'd1;
                     Tuse_rt = `TUSE_IGNORE;
@@ -447,7 +481,7 @@ module Control #(
                     EXTop = `EXTOP_SIGN;
                     ALUop = `ALUOP_ADD;
                     MDUop = `MDUOP_NOOP;
-                    CMPop = `CMPOP_IGNORE;
+                    CMPop = `CMPOP_NOOP;
                     CMPSrc = `CMPSRC_IGNORE;
                     Tuse_rs = 2'd1;
                     Tuse_rt = `TUSE_IGNORE;
@@ -466,7 +500,7 @@ module Control #(
                     EXTop = `EXTOP_SIGN;
                     ALUop = `ALUOP_ADD;
                     MDUop = `MDUOP_NOOP;
-                    CMPop = `CMPOP_IGNORE;
+                    CMPop = `CMPOP_NOOP;
                     CMPSrc = `CMPSRC_IGNORE;
                     Tuse_rs = 2'd1;
                     Tuse_rt = `TUSE_IGNORE;
@@ -485,7 +519,7 @@ module Control #(
                     EXTop    = `EXTOP_SIGN;
                     ALUop    = `ALUOP_ADD;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = 2'd2;
@@ -503,7 +537,7 @@ module Control #(
                     EXTop    = `EXTOP_SIGN;
                     ALUop    = `ALUOP_ADD;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = 2'd2;
@@ -521,7 +555,7 @@ module Control #(
                     EXTop    = `EXTOP_SIGN;
                     ALUop    = `ALUOP_ADD;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = 2'd2;
@@ -575,7 +609,7 @@ module Control #(
                     EXTop    = `EXTOP_UPPER;
                     ALUop    = `ALUOP_OR;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = 2'd1;
                     Tuse_rt  = `TUSE_IGNORE;
@@ -593,7 +627,7 @@ module Control #(
                     EXTop    = `EXTOP_IGNORE;
                     ALUop    = `ALUOP_NOOP;
                     MDUop    = `MDUOP_NOOP;
-                    CMPop    = `CMPOP_IGNORE;
+                    CMPop    = `CMPOP_NOOP;
                     CMPSrc   = `CMPSRC_IGNORE;
                     Tuse_rs  = `TUSE_IGNORE;
                     Tuse_rt  = `TUSE_IGNORE;
@@ -613,7 +647,7 @@ module Control #(
                             EXTop = `EXTOP_IGNORE;
                             ALUop = `ALUOP_NOOP;
                             MDUop = `MDUOP_NOOP;
-                            CMPop = `CMPOP_IGNORE;
+                            CMPop = `CMPOP_NOOP;
                             CMPSrc = `CMPSRC_IGNORE;
                             Tuse_rs = `TUSE_IGNORE;
                             Tuse_rt = `TUSE_IGNORE;
@@ -624,57 +658,60 @@ module Control #(
                             ALUSrc   = `ALUSRC_IGNORE;
                             RegSrc   = `REGSRC_IGNORE;
                             RegDst   = `REGDST_IGNORE;
-                            RegWrite = `REGWRITE_DISABLE;
+                            RegWrite = `REGWRITE_CP0;
                             MemWrite = `MEMWRITE_DISABLE;
                             DEop     = `DEOP_NOOP;
-                            CP0Write = 1'b1;
                             Branch   = `BRANCH_DISABLE;
                             Jump     = `JUMP_DISABLE;
                             EXTop    = `EXTOP_IGNORE;
                             ALUop    = `ALUOP_NOOP;
                             MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
+                            CMPop    = `CMPOP_NOOP;
                             CMPSrc   = `CMPSRC_IGNORE;
                             Tuse_rs  = `TUSE_IGNORE;
                             Tuse_rt  = 2'd2;
                             Tnew     = `TNEW_IGNORE;
                         end
-                        6'b011000: begin  // eret
-                            ALUSrc   = `ALUSRC_IGNORE;
-                            RegSrc   = `REGSRC_IGNORE;
-                            RegDst   = `REGDST_IGNORE;
-                            RegWrite = `REGWRITE_DISABLE;
-                            MemWrite = `MEMWRITE_DISABLE;
-                            DEop     = `DEOP_NOOP;
-                            Branch   = `BRANCH_DISABLE;
-                            Jump     = `JUMP_EPC;
-                            EXTop    = `EXTOP_IGNORE;
-                            ALUop    = `ALUOP_NOOP;
-                            MDUop    = `MDUOP_NOOP;
-                            CMPop    = `CMPOP_IGNORE;
-                            CMPSrc   = `CMPSRC_IGNORE;
-                            Tuse_rs  = `TUSE_IGNORE;
-                            Tuse_rt  = `TUSE_IGNORE;
-                            Tnew     = `TNEW_IGNORE;
-                        end
-                        default: begin  // RI
-                            ALUSrc    = `ALUSRC_IGNORE;
-                            RegSrc    = `REGSRC_IGNORE;
-                            RegDst    = `REGDST_IGNORE;
-                            RegWrite  = `REGWRITE_DISABLE;
-                            MemWrite  = `MEMWRITE_DISABLE;
-                            DEop      = `DEOP_NOOP;
-                            Branch    = `BRANCH_DISABLE;
-                            Jump      = `JUMP_DISABLE;
-                            EXTop     = `EXTOP_IGNORE;
-                            ALUop     = `ALUOP_NOOP;
-                            MDUop     = `MDUOP_NOOP;
-                            CMPop     = `CMPOP_IGNORE;
-                            CMPSrc    = `CMPSRC_IGNORE;
-                            Tuse_rs   = `TUSE_IGNORE;
-                            Tuse_rt   = `TUSE_IGNORE;
-                            Tnew      = `TNEW_IGNORE;
-                            exception = `EXCEPTION_RI;
+                        default: begin
+                            case (funct)
+                                6'b011000: begin  // eret
+                                    ALUSrc   = `ALUSRC_IGNORE;
+                                    RegSrc   = `REGSRC_IGNORE;
+                                    RegDst   = `REGDST_IGNORE;
+                                    RegWrite = `REGWRITE_DISABLE;
+                                    MemWrite = `MEMWRITE_DISABLE;
+                                    DEop     = `DEOP_NOOP;
+                                    Branch   = `BRANCH_DISABLE;
+                                    Jump     = `JUMP_EPC;
+                                    EXTop    = `EXTOP_IGNORE;
+                                    ALUop    = `ALUOP_NOOP;
+                                    MDUop    = `MDUOP_NOOP;
+                                    CMPop    = `CMPOP_NOOP;
+                                    CMPSrc   = `CMPSRC_IGNORE;
+                                    Tuse_rs  = `TUSE_IGNORE;
+                                    Tuse_rt  = `TUSE_IGNORE;
+                                    Tnew     = `TNEW_IGNORE;
+                                end
+                                default: begin  // RI
+                                    ALUSrc    = `ALUSRC_IGNORE;
+                                    RegSrc    = `REGSRC_IGNORE;
+                                    RegDst    = `REGDST_IGNORE;
+                                    RegWrite  = `REGWRITE_DISABLE;
+                                    MemWrite  = `MEMWRITE_DISABLE;
+                                    DEop      = `DEOP_NOOP;
+                                    Branch    = `BRANCH_DISABLE;
+                                    Jump      = `JUMP_DISABLE;
+                                    EXTop     = `EXTOP_IGNORE;
+                                    ALUop     = `ALUOP_NOOP;
+                                    MDUop     = `MDUOP_NOOP;
+                                    CMPop     = `CMPOP_NOOP;
+                                    CMPSrc    = `CMPSRC_IGNORE;
+                                    Tuse_rs   = `TUSE_IGNORE;
+                                    Tuse_rt   = `TUSE_IGNORE;
+                                    Tnew      = `TNEW_IGNORE;
+                                    exception = `EXCEPTION_RI;
+                                end
+                            endcase
                         end
                     endcase
                 end
@@ -690,7 +727,7 @@ module Control #(
                     EXTop     = `EXTOP_IGNORE;
                     ALUop     = `ALUOP_NOOP;
                     MDUop     = `MDUOP_NOOP;
-                    CMPop     = `CMPOP_IGNORE;
+                    CMPop     = `CMPOP_NOOP;
                     CMPSrc    = `CMPSRC_IGNORE;
                     Tuse_rs   = `TUSE_IGNORE;
                     Tuse_rt   = `TUSE_IGNORE;

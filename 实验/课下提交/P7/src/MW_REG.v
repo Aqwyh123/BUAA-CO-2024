@@ -44,7 +44,7 @@ module MW_REG (
     always @(posedge clk) begin
         if (reset) begin
             W_instr_reg            <= 32'd0;
-            W_PC_reg               <= 32'd0;
+            W_PC_reg               <= `PC_INIT;
             W_ALU_result_reg       <= 32'd0;
             W_HI_LO_reg            <= 32'd0;
             W_MEM_read_data_reg    <= 32'd0;
@@ -53,7 +53,7 @@ module MW_REG (
             W_REG_write_enable_reg <= 1'b0;
         end else if (req) begin
             W_instr_reg            <= 32'd0;
-            W_PC_reg               <= 32'd0;
+            W_PC_reg               <= `EXC_ADDR;
             W_ALU_result_reg       <= 32'd0;
             W_HI_LO_reg            <= 32'd0;
             W_MEM_read_data_reg    <= 32'd0;
@@ -71,7 +71,7 @@ module MW_REG (
             W_REG_write_enable_reg <= W_REG_write_enable_reg;
         end else if (flush) begin
             W_instr_reg            <= 32'd0;
-            W_PC_reg               <= 32'd0;
+            W_PC_reg               <= M_PC;
             W_ALU_result_reg       <= 32'd0;
             W_HI_LO_reg            <= 32'd0;
             W_MEM_read_data_reg    <= 32'd0;

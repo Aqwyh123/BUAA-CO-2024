@@ -10,18 +10,17 @@ module ALU (
     reg [32:0] temp;
     always @(*) begin
         overflow = 1'b0;
-        temp     = 32'h00000000;
+        temp     = 33'd0;
         case (operation)
-            `ALUOP_NOOP: result = 32'h00000000;  // noop
             `ALUOP_ADD: begin  // add
                 temp     = {operand1[31], operand1} + {operand2[31], operand2};
                 result   = operand1 + operand2;
                 overflow = temp[32] != temp[31];
             end
             `ALUOP_ADDU: result = operand1 + operand2;  // addu
-            `ALUOP_SUB: begin
+            `ALUOP_SUB: begin  // sub
                 temp     = {operand1[31], operand1} - {operand2[31], operand2};
-                result   = operand1 - operand2;  // sub
+                result   = operand1 - operand2;
                 overflow = temp[32] != temp[31];
             end
             `ALUOP_SUBU: result = operand1 - operand2;  // subu
@@ -34,7 +33,7 @@ module ALU (
             `ALUOP_SRA:  result = $signed(operand1) >>> operand2[4:0];  // sra
             `ALUOP_LT:   result = $signed(operand1) < $signed(operand2);  // slt
             `ALUOP_LTU:  result = operand1 < operand2;  // sltu
-            default:     result = 32'hxxxxxxxx;
+            default:     result = 32'h00000000;  // noop
         endcase
     end
 endmodule

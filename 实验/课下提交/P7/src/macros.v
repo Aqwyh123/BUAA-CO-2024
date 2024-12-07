@@ -43,9 +43,9 @@
 `define EXC_ADDR 32'h00004180
 
 // CP0 寄存器定义
-`define SR_NUMBER 12
-`define CAUSE_NUMBER 13
-`define EPC_NUMBER 14
+`define SR_NUMBER 5'd12
+`define CAUSE_NUMBER 5'd13
+`define EPC_NUMBER 5'd14
 
 `define IM_SIZE 6
 `define IM_MSB 15
@@ -104,13 +104,13 @@
 `define CMPSRC_ZERO 1'b1
 
 `define CMPOP_SIZE 3
-`define CMPOP_IGNORE 3'b000
-`define CMPOP_EQ 3'b000
-`define CMPOP_NE 3'b001
-`define CMPOP_LT 3'b010
-`define CMPOP_LE 3'b011
-`define CMPOP_GT 3'b100
-`define CMPOP_GE 3'b101
+`define CMPOP_NOOP 3'b000
+`define CMPOP_EQ 3'b001
+`define CMPOP_NE 3'b010
+`define CMPOP_LT 3'b011
+`define CMPOP_LE 3'b100
+`define CMPOP_GT 3'b101
+`define CMPOP_GE 3'b110
 
 `define ALUSRC_SIZE 3
 `define ALUSRC1_SIZE 1
@@ -145,8 +145,6 @@
 `define MDUOP_MULTU 3'b010
 `define MDUOP_DIV 3'b011
 `define MDUOP_DIVU 3'b100
-`define MDUOP_MTHI 3'b101
-`define MDUOP_MTLO 3'b110
 
 `define DELAY_SIZE 4
 `define DELAY_MUTI 4'd5
@@ -177,14 +175,17 @@
 
 `define REGDST_SIZE 2
 `define REGDST_IGNORE 2'b00
-`define REGDST_RT 2'b00
-`define REGDST_RD 2'b01
-`define REGDST_RA 2'b10
+`define REGDST_RT 2'b01
+`define REGDST_RD 2'b10
+`define REGDST_RA 2'b11
 
-`define REGWRITE_SIZE 2
-`define REGWRITE_DISABLE 2'b00
-`define REGWRITE_UNCOND 2'b01
-`define REGWRITE_COND 2'b10
+`define REGWRITE_SIZE 3
+`define REGWRITE_DISABLE 3'b000
+`define REGWRITE_UNCOND 3'b001
+`define REGWRITE_COND 3'b010
+`define REGWRITE_HI 3'b011
+`define REGWRITE_LO 3'b100
+`define REGWRITE_CP0 3'b101
 
 `define EXCEPTION_SIZE 2
 `define EXCEPTION_NONE 2'b00

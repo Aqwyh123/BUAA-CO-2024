@@ -22,7 +22,6 @@ module CPU (
     output wire [31:0] GRF_PC             // GRF PC
 );
     wire [31:0] F_PC, D_PC, E_PC, M_PC, W_PC;
-    wire [31:0] F_instr_raw;
     wire [31:0] F_instr, D_instr, E_instr, M_instr, W_instr;
     reg D_REG_write_enable;
     wire E_REG_write_enable, M_REG_write_enable, W_REG_write_enable;
@@ -33,24 +32,24 @@ module CPU (
     wire signed [`T_SIZE - 1:0] E_Tnew, M_Tnew, W_Tnew;
 
     wire [`REGSRC_SIZE - 1:0] D_RegSrc, E_RegSrc, M_RegSrc, W_RegSrc;
+    wire [`REGWRITE_SIZE - 1:0] D_RegWrite, E_RegWrite, M_RegWrite;
     wire [`MDUOP_SIZE - 1:0] D_MDUop, E_MDUop;
-    wire D_request = D_RegSrc == `REGSRC_HI || D_RegSrc == `REGSRC_LO || D_MDUop != `MDUOP_NOOP;
     wire E_MDU_start, E_MDU_busy;
-    wire E_busy = E_MDU_start || E_MDU_busy;
+    wire D_MDU_request = D_RegSrc == `REGSRC_HI || D_RegSrc == `REGSRC_LO ||
+                         D_RegWrite == `REGWRITE_HI || D_RegWrite == `REGWRITE_LO ||
+                         D_MDUop != `MDUOP_NOOP;
+    wire D_CP0_request = D_Jump == `JUMP_EPC;
+    wire E_CP0_busy = E_RegWrite == `REGWRITE_CP0 && E_instr[`RD_MSB:`RD_LSB] == `EPC_NUMBER;
 
     wire stall;
     wire [`FWD_FROM_SIZE - 1:0] FWD_to_D_rs, FWD_to_D_rt, FWD_to_E_rs, FWD_to_E_rt, FWD_to_M_rt;
 
-    wire                         F_IM_exception;
-    wire [`EXCEPTION_SIZE - 1:0] F_Control_exception;
-
-    wire [   `BRANCH_SIZE - 1:0] D_Branch;
-    wire [     `JUMP_SIZE - 1:0] D_Jump;
-    wire [    `EXTOP_SIZE - 1:0] D_EXTop;
-    wire [     `CMPOP_SIZE -1:0] D_CMPop;
-    wire [   `REGDST_SIZE - 1:0] D_RegDst;
-    wire [ `REGWRITE_SIZE - 1:0] D_RegWrite;
-    wire                         D_CMPSrc;
+    wire [`BRANCH_SIZE - 1:0] D_Branch;
+    wire [  `JUMP_SIZE - 1:0] D_Jump;
+    wire [ `EXTOP_SIZE - 1:0] D_EXTop;
+    wire [  `CMPOP_SIZE -1:0] D_CMPop;
+    wire [`REGDST_SIZE - 1:0] D_RegDst;
+    wire                      D_CMPSrc;
     wire [31:0] D_EXT_result, FD_next_PC;
     wire                        D_CMP_result;
 
@@ -58,18 +57,16 @@ module CPU (
     wire [   `ALUOP_SIZE - 1:0] E_ALUop;
     wire [`MEMWRITE_SIZE - 1:0] E_MemWrite;
     wire [    `DEOP_SIZE - 1:0] E_DEop;
+    wire [                 1:0] E_HILO_write_enable;
     wire [31:0] E_EXT_result, E_ALU_result, E_HI, E_LO;
     reg [31:0] E_ALUoperand1, E_ALUoperand2;
-    wire                        E_ALU_overflow;
 
     wire [    `JUMP_SIZE - 1:0] M_Jump;
     wire [`MEMWRITE_SIZE - 1:0] M_MemWrite;
     wire [    `DEOP_SIZE - 1:0] M_DEop;
-    wire                        M_CP0_write_enable;
     wire [31:0] M_ALU_result, M_MEM_read_data_raw, M_HI_LO, M_MEM_write_data;
     wire [31:0] M_MEM_read_data, M_CP0_read_data;
     wire [3:0] M_MEM_write_enable;
-    wire M_BE_exception, M_DE_exception;
 
     wire [31:0] W_MEM_read_data, W_ALU_result, W_HI_LO, W_CP0_read_data;
     reg [31:0] W_REG_write_data;
@@ -95,16 +92,16 @@ module CPU (
                             E_rt_data_raw;
     wire [31:0] M_rt_data = FWD_to_M_rt == `FWD_FROM_MW ? W_FWD_data : M_rt_data_raw;
 
-    wire [`EXCCODE_SIZE - 1:0] E_ExcCode_raw, M_ExcCode_raw;
+    wire F_IM_exception, E_ALU_overflow, M_BE_exception, M_DE_exception;
+    wire [`EXCEPTION_SIZE - 1:0] D_Control_exception;
+    wire [`EXCCODE_SIZE - 1:0] D_ExcCode_raw, E_ExcCode_raw, M_ExcCode_raw;
     wire [`EXCCODE_SIZE - 1:0] F_ExcCode, D_ExcCode, E_ExcCode, M_ExcCode;
     wire F_BD, D_BD, E_BD, M_BD;
-
     wire [31:0] EPC;
     wire [ 1:0] Request;
-    wire        irq = Request[0], erq = Request[1];
-    wire        res = irq || erq;  // 异常/中断请求
-    assign PC               = M_PC;  // 宏观 PC
 
+    assign req              = |Request;  // 异常/中断请求
+    assign PC               = M_PC;  // 宏观 PC
     assign MEM_PC           = M_PC;  // MEM PC
     assign GRF_write_number = W_REG_write_number;  // GRF 待写入寄存器编号
     assign GRF_write_data   = W_REG_write_data;  // GRF 待写入数据
@@ -116,7 +113,8 @@ module CPU (
         .D_rt              (D_instr[`RT_MSB:`RT_LSB]),
         .D_Tuse_rs         (D_Tuse_rs),
         .D_Tuse_rt         (D_Tuse_rt),
-        .D_request         (D_request),
+        .D_MDU_request     (D_MDU_request),
+        .D_CP0_request     (D_CP0_request),
         .E_rs              (E_instr[`RS_MSB:`RS_LSB]),
         .E_rt              (E_instr[`RT_MSB:`RT_LSB]),
         .E_REG_write_number(E_REG_write_number),
@@ -124,7 +122,8 @@ module CPU (
         .E_Tuse_rs         (E_Tuse_rs),
         .E_Tuse_rt         (E_Tuse_rt),
         .E_Tnew            (E_Tnew),
-        .E_busy            (E_busy),
+        .E_MDU_busy        (E_MDU_start || E_MDU_busy),
+        .E_CP0_busy        (E_CP0_busy),
         .M_rs              (M_instr[`RS_MSB:`RS_LSB]),
         .M_rt              (M_instr[`RT_MSB:`RT_LSB]),
         .M_REG_write_number(M_REG_write_number),
@@ -148,11 +147,6 @@ module CPU (
     );
 
     // 取指阶段 Fetch 开始
-    Control #(`STAGE_FETCH) F_control (  // F 控制器
-        .instr    (F_instr_raw),
-        .exception(F_Control_exception)
-    );
-
     PC F_pc (
         .clk    (clk),
         .reset  (reset),
@@ -162,48 +156,45 @@ module CPU (
         .PC     (F_PC)
     );
 
-    assign IM_ADDR = F_PC;  // IM 读取地址
-    assign F_instr_raw = IM_read_data;  // IM 读取数据
+    assign IM_ADDR        = F_PC;  // IM 读取地址
+    assign F_instr        = IM_read_data;  // IM 读取数据
+
     assign F_IM_exception = F_PC[1:0] != 2'b00 || !(F_PC >= `IM_LSA && F_PC <= `IM_MSA);
+    assign F_BD           = D_Jump != `JUMP_EPC && (|D_Jump || |D_Branch);  // F 级分支延迟
+    assign F_ExcCode      = F_IM_exception ? `EXCCODE_ADEL : `EXCCODE_NONE;
     // 取指阶段 Fetch 结束
 
-    assign F_BD = D_Jump != `JUMP_EPC && (|D_Jump || |D_Branch);  // F 级分支延迟
-    assign F_ExcCode = F_IM_exception ? `EXCCODE_ADEL :
-                       F_Control_exception == `EXCEPTION_RI ? `EXCCODE_RI :
-                       F_Control_exception == `EXCEPTION_SYSCALL ? `EXCCODE_SYSCALL :
-                       `EXCCODE_NONE;
-    assign F_instr = F_IM_exception || F_Control_exception == `EXCEPTION_RI ? 32'h00000000 :
-                     F_instr_raw; // 无效指令置 NOP
     FD_REG FD_reg (  // FD 流水线寄存器
         .clk      (clk),
         .reset    (reset),
         .req      (req),
         .stall    (stall),
-        .flush    (D_Jump == `JUMP_EPC || D_Branch == `BRANCH_LIKELY && !D_CMP_result),
+        .flush    (D_Jump == `JUMP_EPC || (D_Branch == `BRANCH_LIKELY && !D_CMP_result)),
         .F_PC     (F_PC),
-        .F_instr  (F_instr),
+        .F_instr  (F_IM_exception ? 32'h00000000 : F_instr),
         .F_BD     (F_BD),
         .F_ExcCode(F_ExcCode),
         .D_PC     (D_PC),
         .D_instr  (D_instr),
         .D_BD     (D_BD),
-        .D_ExcCode(D_ExcCode)
+        .D_ExcCode(D_ExcCode_raw)
     );
 
     // 译码阶段 Decode 开始
     Control #(`STAGE_DECODE) D_control (  // D 控制器
-        .instr   (D_instr),
-        .Branch  (D_Branch),
-        .Jump    (D_Jump),
-        .EXTop   (D_EXTop),
-        .CMPSrc  (D_CMPSrc),
-        .CMPop   (D_CMPop),
-        .MDUop   (D_MDUop),
-        .RegDst  (D_RegDst),
-        .RegWrite(D_RegWrite),
-        .RegSrc  (D_RegSrc),
-        .Tuse_rs (D_Tuse_rs),
-        .Tuse_rt (D_Tuse_rt)
+        .instr    (D_instr),
+        .Branch   (D_Branch),
+        .Jump     (D_Jump),
+        .EXTop    (D_EXTop),
+        .CMPSrc   (D_CMPSrc),
+        .CMPop    (D_CMPop),
+        .MDUop    (D_MDUop),
+        .RegDst   (D_RegDst),
+        .RegWrite (D_RegWrite),
+        .RegSrc   (D_RegSrc),
+        .Tuse_rs  (D_Tuse_rs),
+        .Tuse_rt  (D_Tuse_rt),
+        .exception(D_Control_exception)
     );
 
     // 写回阶段 Writeback 继续
@@ -237,8 +228,8 @@ module CPU (
         .F_PC              (F_PC),
         .D_PC              (D_PC),
         .instr_index_offset(D_instr[`INDEX_MSB:`INDEX_LSB]),
-        .EPC               (EPC),
         .regester          (D_rs_data),
+        .EPC               (EPC),
         .branch            (D_Branch),
         .jump              (D_Jump),
         .condition         (D_CMP_result),
@@ -250,7 +241,7 @@ module CPU (
             `REGDST_RT: D_REG_write_number = D_instr[`RT_MSB:`RT_LSB];
             `REGDST_RD: D_REG_write_number = D_instr[`RD_MSB:`RD_LSB];
             `REGDST_RA: D_REG_write_number = 5'd31;
-            default:    D_REG_write_number = 5'bxxxxx;
+            default:    D_REG_write_number = 5'd0;
         endcase
     end
     always @(*) begin
@@ -258,9 +249,14 @@ module CPU (
             `REGWRITE_DISABLE: D_REG_write_enable = 1'b0;
             `REGWRITE_UNCOND:  D_REG_write_enable = 1'b1;
             `REGWRITE_COND:    D_REG_write_enable = D_CMP_result;
-            default:           D_REG_write_enable = 1'bx;
+            default:           D_REG_write_enable = 1'b0;
         endcase
     end
+
+    assign D_ExcCode = |D_ExcCode_raw ? D_ExcCode_raw :
+                        D_Control_exception == `EXCEPTION_RI ? `EXCCODE_RI :
+                        D_Control_exception == `EXCEPTION_SYSCALL ? `EXCCODE_SYSCALL :
+                        `EXCCODE_NONE;
     // 译码阶段 Decode 结束
 
     DE_REG DE_reg (  // DE 流水线寄存器
@@ -270,12 +266,12 @@ module CPU (
         .stall             (1'b0),
         .flush             (stall),
         .D_PC              (D_PC),
-        .D_instr           (D_instr),
-        .D_rs_data         (D_rs_data),
-        .D_rt_data         (D_rt_data),
-        .D_EXT_result      (D_EXT_result),
-        .D_REG_write_number(D_REG_write_number),
-        .D_REG_write_enable(D_REG_write_enable),
+        .D_instr           (D_Control_exception == `EXCEPTION_RI ? 32'h00000000 : D_instr),
+        .D_rs_data         (D_Control_exception == `EXCEPTION_RI ? 32'h00000000 : D_rs_data),
+        .D_rt_data         (D_Control_exception == `EXCEPTION_RI ? 32'h00000000 : D_rt_data),
+        .D_EXT_result      (D_Control_exception == `EXCEPTION_RI ? 32'h00000000 : D_EXT_result),
+        .D_REG_write_number(D_Control_exception == `EXCEPTION_RI ? 5'd0 : D_REG_write_number),
+        .D_REG_write_enable(D_Control_exception == `EXCEPTION_RI ? 1'b0 : D_REG_write_enable),
         .D_BD              (D_BD),
         .D_ExcCode         (D_ExcCode),
         .E_PC              (E_PC),
@@ -297,6 +293,7 @@ module CPU (
         .MDUop   (E_MDUop),
         .MemWrite(E_MemWrite),
         .DEop    (E_DEop),
+        .RegWrite(E_RegWrite),
         .RegSrc  (E_RegSrc),
         .Tuse_rs (E_Tuse_rs),
         .Tuse_rt (E_Tuse_rt),
@@ -325,24 +322,27 @@ module CPU (
         .overflow (E_ALU_overflow)
     );
 
+    assign E_HILO_write_enable = {E_RegWrite == `REGWRITE_HI, E_RegWrite == `REGWRITE_LO};
     MDU E_mdu (
-        .clk      (clk),
-        .reset    (reset),
-        .req      (erq),
-        .operand1 (E_rs_data),
-        .operand2 (E_rt_data),
-        .operation(E_MDUop),      // 异常时不执行 MDU 写操作
-        .HI       (E_HI),
-        .LO       (E_LO),
-        .start    (E_MDU_start),
-        .busy     (E_MDU_busy)
+        .clk         (clk),
+        .reset       (reset),
+        .req         (req && |M_ExcCode),    // 即将异常时不执行 MDU 写操作
+        .operand1    (E_rs_data),
+        .operand2    (E_rt_data),
+        .operation   (E_MDUop),
+        .write_enable(E_HILO_write_enable),
+        .HI          (E_HI),
+        .LO          (E_LO),
+        .start       (E_MDU_start),
+        .busy        (E_MDU_busy)
     );
-    // 执行阶段 Execute 结束
 
     assign E_ExcCode = |E_ExcCode_raw ? E_ExcCode_raw :
                         E_ALU_overflow && E_MemWrite != `MEMWRITE_DISABLE ? `EXCCODE_ADES :
                         E_ALU_overflow && E_DEop != `DEOP_NOOP ? `EXCCODE_ADEL :
                         E_ALU_overflow ? `EXCCODE_OV : `EXCCODE_NONE;
+    // 执行阶段 Execute 结束
+
     EM_REG EM_reg (  // EM 流水线寄存器
         .clk               (clk),
         .reset             (reset),
@@ -375,15 +375,15 @@ module CPU (
         .Jump    (M_Jump),
         .MemWrite(M_MemWrite),
         .DEop    (M_DEop),
-        .CP0Write(M_CP0_write_enable),
         .RegSrc  (M_RegSrc),
+        .RegWrite(M_RegWrite),
         .Tuse_rs (M_Tuse_rs),
         .Tuse_rt (M_Tuse_rt),
         .Tnew    (M_Tnew)
     );
 
     BE M_be (
-        .ADDR       (M_ALU_result[1:0]),
+        .ADDR       (M_ALU_result),
         .data_in    (M_rt_data),
         .operation  (M_MemWrite),
         .data_out   (M_MEM_write_data),
@@ -403,7 +403,6 @@ module CPU (
         .data_out (M_MEM_read_data),
         .exception(M_DE_exception)
     );
-    // 访存阶段 Memory 结束
 
     assign M_ExcCode = |M_ExcCode_raw ? M_ExcCode_raw :
                         M_BE_exception ? `EXCCODE_ADES :
@@ -412,11 +411,12 @@ module CPU (
     CP0 M_cp0 (
         .clk         (clk),
         .reset       (reset),
+        .req         (req),
         .number      (M_instr[`RD_MSB:`RD_LSB]),
         .read_data   (M_CP0_read_data),
-        .write_enable(M_CP0_write_enable),
+        .write_enable(M_RegWrite == `REGWRITE_CP0),
         .write_data  (M_rt_data),
-        .VPC         (PC),
+        .VPC         (M_PC),
         .BDIn        (M_BD),
         .ExcCodeIn   (M_ExcCode),
         .HWInt       (HWInt),
@@ -424,6 +424,7 @@ module CPU (
         .EPCOut      (EPC),
         .Request     (Request)
     );
+    // 访存阶段 Memory 结束
 
     MW_REG MW_reg (  // MW 流水线寄存器
         .clk               (clk),

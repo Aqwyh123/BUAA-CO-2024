@@ -15,7 +15,7 @@ module DE (
                       ADDR >= `TIMER1_LSA && ADDR <= `TIMER1_MSA;
     wire operation_half = operation == `DEOP_HALF_UNSIGNED || operation == `DEOP_HALF_SIGNED;
     wire operation_byte = operation == `DEOP_BYTE_UNSIGNED || operation == `DEOP_BYTE_SIGNED;
-    assign exception = !ADDR_valid ||  // 超出地址空间
+    assign exception = !ADDR_valid && operation != `DEOP_NOOP ||  // 超出地址空间
         operation == `DEOP_WORD && ADDR[1:0] != 2'b00 ||  // 按字读未对齐
         operation_half && ADDR[0] == 1'b1 ||  // 按半字读未对齐
         ADDR_Timer && (operation_half || operation_byte);  // Timer 只许按字读

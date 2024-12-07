@@ -21,15 +21,16 @@ module FD_REG (
     assign D_PC      = D_PC_reg;
     assign D_instr   = D_instr_reg;
     assign D_ExcCode = D_ExcCode_reg;
+    assign D_BD      = D_BD_reg;
 
     always @(posedge clk) begin
         if (reset) begin
-            D_PC_reg      <= 32'd0;
+            D_PC_reg      <= `PC_INIT;
             D_instr_reg   <= 32'd0;
             D_ExcCode_reg <= `EXCCODE_SIZE'd0;
             D_BD_reg      <= 1'b0;
         end else if (req) begin
-            D_PC_reg      <= 32'd0;
+            D_PC_reg      <= `EXC_ADDR;
             D_instr_reg   <= 32'd0;
             D_ExcCode_reg <= `EXCCODE_SIZE'd0;
             D_BD_reg      <= 1'b0;
@@ -39,10 +40,10 @@ module FD_REG (
             D_ExcCode_reg <= D_ExcCode_reg;
             D_BD_reg      <= D_BD_reg;
         end else if (flush) begin
-            D_PC_reg      <= 32'd0;
+            D_PC_reg      <= F_PC;
             D_instr_reg   <= 32'd0;
             D_ExcCode_reg <= `EXCCODE_SIZE'd0;
-            D_BD_reg      <= 1'b0;
+            D_BD_reg      <= F_BD;
         end else begin
             D_PC_reg      <= F_PC;
             D_instr_reg   <= F_instr;
