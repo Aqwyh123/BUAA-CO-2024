@@ -1,12 +1,13 @@
 #!/bin/bash
 
+src="../src" # 源文件目录
+sim_time="20us" # 仿真时间
+# 下方一般无须修改
 data_maker="./dataMaker7.jar"
 # nop_filler="./nop_filler.cpp"
 # handler="./handler.asm"
 mars="./Mars/Mars_COKiller.jar"
-make_time="10s"
-src="../src"
-sim_time="20us"
+make_timeout="10s"
 
 function empty_dir(){
     if [ -d "$1" ]; then
@@ -28,7 +29,7 @@ function make_data(){
     java -jar $data_maker > "./out/$1/code.asm"
     # ./build/nop_filler "./out/$1/code.asm" $handler "./out/$1/code.asm"
     java -jar $mars "./out/$1/code.asm" db nc a mc LargeText dump .text HexText "./out/$1/code.txt"
-    if ! timeout $make_time java -jar $mars "./out/$1/code.asm" db nc ex lg mc LargeText > "./out/$1/stdout.txt" ; then
+    if ! timeout $make_timeout java -jar $mars "./out/$1/code.asm" db nc ex lg mc LargeText > "./out/$1/stdout.txt" ; then
         echo "Test case $1 invalid"
         rm -r "./out/$1"
         return 1
@@ -49,7 +50,7 @@ function compile {
     cp $src/*.v ./build
     cd ./build || exit
     mkdir ./sim
-    vcs -full64 ./*.v -o sim/simv -fsdb -kdb -q
+    vcs -full64 ./*.v -o sim/simv -q
     cd ..
 }
 
