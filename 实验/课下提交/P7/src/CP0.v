@@ -16,7 +16,6 @@ module CP0 (
     input  wire        reset,
     input  wire        req,
     input  wire [ 4:0] number,
-    output wire [31:0] read_data,
     input  wire        write_enable,
     input  wire [31:0] write_data,
     input  wire [31:0] VPC,
@@ -24,8 +23,9 @@ module CP0 (
     input  wire [ 4:0] ExcCodeIn,
     input  wire [ 5:0] HWInt,
     input  wire        EXLClr,
+    output wire [31:0] read_data,
     output wire [31:0] EPCOut,
-    output wire [ 1:0] Request
+    output wire        Request
 );
     reg [31:0] regfile[0:31];
     assign read_data = regfile[number];  // 无险情，无需内部转发
@@ -34,7 +34,7 @@ module CP0 (
 
     wire interupt = `IE & ~`EXL & |(`IM & HWInt); // 全局中断使能且不在异常处理状态且相应中断使能且相应中断请求
     wire exception = ~`EXL & |ExcCodeIn;  // 不在异常处理状态且有异常请求
-    assign Request = {exception, interupt};
+    assign Request = exception | interupt;
 
 `ifdef LOCAL
     wire [                     31:0] SR = `SR;

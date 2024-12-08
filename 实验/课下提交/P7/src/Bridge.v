@@ -1,7 +1,6 @@
 `include "macros.v"
 
 module Bridge (
-    input  wire        req,
     input  wire [31:0] PrAddr,
     input  wire [31:0] PrWD,
     input  wire [ 3:0] PrWE,
@@ -29,8 +28,8 @@ module Bridge (
                   hit_INT ? INT_RD : 32'hxxxxxxxx;
     assign DEV_WD = PrWD;
 
-    assign DM_WE = !req && hit_DM ? PrWE : 4'b0000;
-    assign timer0_WE = !req && hit_timer0 ? |PrWE : 1'b0;
-    assign timer1_WE = !req && hit_timer1 ? |PrWE : 1'b0;
-    assign INT_WE = !req && hit_INT ? PrWE : 4'b0000;
+    assign DM_WE = hit_DM ? PrWE : 4'b0000;
+    assign timer0_WE = hit_timer0 ? |PrWE : 1'b0;
+    assign timer1_WE = hit_timer1 ? |PrWE : 1'b0;
+    assign INT_WE = hit_INT ? PrWE : 4'b0000;
 endmodule

@@ -13,7 +13,6 @@ module CPU (
     input  wire [31:0] MEM_read_data,     // 内存读取数据
     output wire [31:0] MEM_write_data,    // 内存待写入数据
     output wire [ 3:0] MEM_write_enable,  // 内存字节使能信号
-    output wire        req,               // 中断请求信号
     // 调试信号
     output wire [31:0] MEM_PC,            // MEM PC
     output wire        GRF_write_enable,  // GRF 写使能信号
@@ -98,9 +97,8 @@ module CPU (
     wire [`EXCCODE_SIZE - 1:0] F_ExcCode, D_ExcCode, E_ExcCode, M_ExcCode;
     wire F_BD, D_BD, E_BD, M_BD;
     wire [31:0] EPC;
-    wire [ 1:0] Request;
 
-    assign req              = |Request;  // 异常/中断请求
+    wire        req;  // 异常/中断请求
     assign PC               = M_PC;  // 宏观 PC
     assign MEM_PC           = M_PC;  // MEM PC
     assign GRF_write_number = W_REG_write_number;  // GRF 待写入寄存器编号
@@ -326,7 +324,7 @@ module CPU (
     MDU E_mdu (
         .clk         (clk),
         .reset       (reset),
-        .req         (req && |M_ExcCode),    // 即将异常时不执行 MDU 写操作
+        .req         (req),                  // 即将异常/中断时不执行 MDU 写操作
         .operand1    (E_rs_data),
         .operand2    (E_rt_data),
         .operation   (E_MDUop),
@@ -393,7 +391,7 @@ module CPU (
 
     assign MEM_ADDR            = M_ALU_result;  // 内存读写逻辑地址
     assign MEM_write_data      = M_MEM_write_data;  // 内存写入数据
-    assign MEM_write_enable    = M_MEM_write_enable;  // 内存写字节使能
+    assign MEM_write_enable    = req ? 4'b0000 : M_MEM_write_enable;  // 内存字节使能信号
     assign M_MEM_read_data_raw = MEM_read_data;  // 内存读取数据
 
     DE M_de (
@@ -422,7 +420,7 @@ module CPU (
         .HWInt       (HWInt),
         .EXLClr      (M_Jump == `JUMP_EPC),
         .EPCOut      (EPC),
-        .Request     (Request)
+        .Request     (req)
     );
     // 访存阶段 Memory 结束
 

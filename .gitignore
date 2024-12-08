@@ -9,6 +9,7 @@
 !*.pdf
 !*.md
 !*.png
+!*.jpg
 
 !*.py
 !*.c
