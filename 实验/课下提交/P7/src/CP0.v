@@ -14,7 +14,6 @@
 module CP0 (
     input  wire        clk,
     input  wire        reset,
-    input  wire        req,
     input  wire [ 4:0] number,
     input  wire        write_enable,
     input  wire [31:0] write_data,
@@ -28,9 +27,8 @@ module CP0 (
     output wire        Request
 );
     reg [31:0] regfile[0:31];
-    assign read_data = regfile[number];  // 无险情，无需内部转发
-    assign EPCOut = !req && write_enable && number == `EPC_NUMBER ? write_data :
-                     regfile[`EPC_NUMBER]; // 内部转发 EPC
+    assign read_data = regfile[number];  // 无险情，无需内部转发。EPC 需要内部转发
+    assign EPCOut = write_enable && number == `EPC_NUMBER ? write_data : regfile[`EPC_NUMBER];
 
     wire interupt = `IE & ~`EXL & |(`IM & HWInt); // 全局中断使能且不在异常处理状态且相应中断使能且相应中断请求
     wire exception = ~`EXL & |ExcCodeIn;  // 不在异常处理状态且有异常请求

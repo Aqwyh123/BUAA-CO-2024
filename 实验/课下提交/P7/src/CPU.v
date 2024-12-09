@@ -409,10 +409,9 @@ module CPU (
     CP0 M_cp0 (
         .clk         (clk),
         .reset       (reset),
-        .req         (req),
         .number      (M_instr[`RD_MSB:`RD_LSB]),
         .read_data   (M_CP0_read_data),
-        .write_enable(M_RegWrite == `REGWRITE_CP0),
+        .write_enable(req ? 1'b0 : M_RegWrite == `REGWRITE_CP0),
         .write_data  (M_rt_data),
         .VPC         (M_PC),
         .BDIn        (M_BD),
